@@ -1136,7 +1136,8 @@ table.premium-table tr:hover td {
   border-color: var(--accent-cyan);
   color: white;
 }
-
+/* Hide mobile menu button on larger screens */
+#mobile-menu-btn { display: none; }
 /* Responsive design for mobile */
 @media (max-width: 768px) {
   /* Sidebar overlay */
