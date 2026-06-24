@@ -97,6 +97,7 @@ body {
   letter-spacing: 1px;
   background: linear-gradient(to right, #10b981, #06b6d4);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -566,7 +567,7 @@ table.premium-table tr:hover td {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 3500;
   opacity: 0;
   pointer-events: none;
   transition: var(--transition-smooth);
@@ -749,6 +750,7 @@ table.premium-table tr:hover td {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-glow);
+  min-height: 0;
 }
 
 .commentary-log {
@@ -799,6 +801,7 @@ table.premium-table tr:hover td {
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .sidebar-live-match-row {
@@ -877,6 +880,7 @@ table.premium-table tr:hover td {
   margin-bottom: 8px;
   background: linear-gradient(to right, #10b981, #06b6d4);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

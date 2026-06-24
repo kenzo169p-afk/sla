@@ -251,6 +251,19 @@
     </div>
   </div>
 
+  <!-- H. Sponsor Offers Modal -->
+  <div class="modal-overlay" id="modal-sponsor-offers">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <span id="sponsor-offers-title">Propostas de Patrocínio</span>
+        <button onclick="closeModal('modal-sponsor-offers')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="modal-sponsor-offers-body" style="padding: 20px 0 10px 0;">
+        <!-- Dynamically rendered sponsor offers -->
+      </div>
+    </div>
+  </div>
+
   <!-- E. Mid-Game Roster Substitution Modal -->
   <div class="modal-overlay" id="modal-match-sub">
     <div class="modal-content">
@@ -293,6 +306,19 @@
       <div id="modal-random-event-body" style="padding: 20px 0 10px 0;">
         <!-- Dynamically rendered event content -->
       </div>
+    </div>
+  </div>
+
+  <!-- Generic Alert Modal -->
+  <div class="modal-overlay" id="modal-alert">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border-bottom: none; margin-bottom: 12px; padding: 0;">
+        <span id="modal-alert-title" style="font-size: 18px; font-weight: 800; color: var(--accent-cyan);">Aviso</span>
+      </div>
+      <div id="modal-alert-message" style="font-size: 14.5px; color: var(--text-main); margin-bottom: 24px; line-height: 1.5;">
+        <!-- Message here -->
+      </div>
+      <button class="btn-primary" id="modal-alert-btn" onclick="closeModal('modal-alert')">OK</button>
     </div>
   </div>
 

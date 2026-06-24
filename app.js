@@ -115,8 +115,8 @@ function renderApp() {
   if (!game.state) return;
 
   // 1. Render Header / Status information
-  const userTeam = game.findTeamById(game.state.manager.teamId);
-  const weekInfo = game.getCurrentWeekMatchInfo();
+  const userTeam = game.findTeamById(game.state.manager.teamId) || { name: "Sem Time", budget: 0, squad: [] };
+  const weekInfo = game.getCurrentWeekMatchInfo() || { title: "Nenhum", match: null };
 
   document.getElementById("header-week-badge").innerHTML = `
     Temporada <span>${game.state.season}</span> | Semana <span>${game.state.week}</span> | Próximo: <span style="color: var(--accent-emerald)">${weekInfo.title}</span>
@@ -124,11 +124,13 @@ function renderApp() {
 
   // Render Sidebar manager card info
   let userWages = 0;
-  userTeam.squad.forEach(p => userWages += p.salary);
+  if (userTeam.squad) {
+    userTeam.squad.forEach(p => userWages += (p.salary || 0));
+  }
   document.getElementById("sidebar-manager-panel").innerHTML = `
     <div class="manager-name">${game.state.manager.name}</div>
     <div class="manager-team">${userTeam.name}</div>
-    <div class="manager-balance" title="Saldo Financeiro">${formatMoney(userTeam.budget)}</div>
+    <div class="manager-balance" title="Saldo Financeiro">${formatMoney(userTeam.budget || 0)}</div>
     <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Salários: ${formatMoney(userWages)}/sem</div>
   `;
 
@@ -180,8 +182,8 @@ function createShieldHTML(colors, size = "20px") {
 
 // Render Dashboard View
 function renderDashboard(container) {
-  const userTeam = getActiveUserTeam();
-  const clubTeam = game.findTeamById(game.state.manager.teamId);
+  const userTeam = getActiveUserTeam() || { name: "Jogador", colors: ["#777", "#333"], id: -1 };
+  const clubTeam = game.findTeamById(game.state.manager.teamId) || { id: -1, name: "Sem Time", colors: ["#777", "#333"] };
   const matchInfo = game.getCurrentWeekMatchInfo();
 
   // Create layout wrapper
@@ -190,10 +192,10 @@ function renderDashboard(container) {
   
   // Left side widget
   let nextMatchHtml = "";
-  if (matchInfo.match) {
+  if (matchInfo && matchInfo.match) {
     const isHome = matchInfo.match.homeId === userTeam.name || matchInfo.match.homeId === userTeam.id;
     const oppId = isHome ? matchInfo.match.awayId : matchInfo.match.homeId;
-    const oppTeam = game.findTeamById(oppId);
+    const oppTeam = game.findTeamById(oppId) || { name: oppId || "A definir", colors: ["#777", "#333"] };
 
     nextMatchHtml = `
       <div class="dashboard-next-match">
@@ -1616,90 +1618,116 @@ function submitContractToPlayer() {
 }
 
 // Render Stadium & Finances (Estádio & Caixa) View
-function renderStadium(container) {
+let activeStadiumTab = "stadium";
+
+function changeStadiumTab(tabId) {
+  activeStadiumTab = tabId;
+  renderApp();
+}
+
+function handleBankBorrow(bankId) {
+  const input = document.getElementById(`input-borrow-${bankId}`);
+  const amt = parseInt(input.value);
+  if (isNaN(amt) || amt <= 0) {
+    alert("Digite um valor válido para empréstimo.");
+    return;
+  }
+  game.borrowMoneyFromBank(bankId, amt);
+  input.value = "";
+  renderApp();
+}
+
+function handleBankRepay(bankId) {
+  const input = document.getElementById(`input-repay-${bankId}`);
+  const amt = parseInt(input.value);
+  if (isNaN(amt) || amt <= 0) {
+    alert("Digite um valor válido para pagamento.");
+    return;
+  }
+  game.repayLoanToBank(bankId, amt);
+  input.value = "";
+  renderApp();
+}
+
+function handleUpgradeAcademy() {
+  game.upgradeAcademy();
+}
+
+function handleSetAcademyLevel() {
+  const select = document.getElementById("academy-level-selector");
+  const level = parseInt(select.value);
+  game.setAcademyLevel(level);
+}
+
+let currentSponsorNegotiationType = null;
+let currentSponsorOffers = [];
+
+function openSponsorNegotiation(type) {
+  currentSponsorNegotiationType = type;
+  currentSponsorOffers = game.generateSponsorOffers(type);
+  
+  const titleEl = document.getElementById("sponsor-offers-title");
+  const bodyEl = document.getElementById("modal-sponsor-offers-body");
+  
+  const typeNames = {
+    master: "Patrocinador Máster",
+    sleeve: "Patrocinador de Manga (Sleeve)",
+    stadium: "Naming Rights do Estádio"
+  };
+  
+  titleEl.textContent = `Propostas: ${typeNames[type]}`;
+  
+  let html = `<div style="display:flex; flex-direction:column; gap:16px;">`;
+  
+  currentSponsorOffers.forEach((offer, index) => {
+    html += `
+      <div class="glass-card" style="border: 1px solid var(--border-glow); padding:16px; display:flex; flex-direction:column; gap:12px; transition:var(--transition-smooth); cursor:pointer;" onclick="selectSponsorOffer(${index})">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:16px; color:var(--accent-cyan);">${offer.name}</strong>
+          <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-weight:700;">${offer.weeksRemaining} semanas</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin:0;">${offer.desc}</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px; border-top:1px dashed var(--border-glow); padding-top:10px;">
+          <div>Semanal: <strong style="color:var(--text-main);">${formatMoney(offer.weeklyFee)}</strong></div>
+          <div>Bônus Vitória: <strong style="color:var(--text-main);">${offer.winBonus > 0 ? formatMoney(offer.winBonus) : "Nenhum"}</strong></div>
+          <div style="grid-column:span 2;">Bônus de Título: <strong style="color:var(--accent-gold);">${offer.titleBonus > 0 ? formatMoney(offer.titleBonus) : "Nenhum"}</strong></div>
+        </div>
+        <button class="btn-primary" style="margin-top:8px; padding:8px 16px; font-size:13px;" onclick="event.stopPropagation(); selectSponsorOffer(${index})">Assinar Contrato</button>
+      </div>
+    `;
+  });
+  
+  html += `</div>`;
+  bodyEl.innerHTML = html;
+  
+  openModal("modal-sponsor-offers");
+}
+
+function selectSponsorOffer(index) {
+  const offer = currentSponsorOffers[index];
+  if (!offer) return;
+  
   const userTeam = game.findTeamById(game.state.manager.teamId);
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "grid-2";
-
-  // Left card: Stadium upgrades and Ticket Prices
-  const stadiumCard = document.createElement("div");
-  stadiumCard.className = "glass-card";
-
-  const upgradeStatus = userTeam.stadiumUpgrading 
-    ? `<div style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px; font-size:13px; margin-bottom:16px;">
-        🏗️ Obras em andamento! Aumentando +${userTeam.stadiumUpgradeCapacityIncrease.toLocaleString()} assentos (${userTeam.stadiumUpgradeWeeks} semanas restantes).
-       </div>`
-    : "";
-
-  stadiumCard.innerHTML = `
-    <h3 class="card-title">Estádio</h3>
-    ${upgradeStatus}
+  game.initDefaultSponsorsIfMissing(userTeam);
+  
+  if (confirm(`Deseja assinar contrato de patrocínio com a ${offer.name} por ${offer.weeksRemaining} semanas?`)) {
+    userTeam.sponsors[currentSponsorNegotiationType] = {
+      name: offer.name,
+      weeklyFee: offer.weeklyFee,
+      winBonus: offer.winBonus,
+      titleBonus: offer.titleBonus,
+      weeksRemaining: offer.weeksRemaining
+    };
     
-    <div style="display:flex; flex-direction:column; gap:20px;">
-      <div>
-        <span style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Capacidade do Estádio</span>
-        <div style="font-size:24px; font-weight:800; margin-top:4px;">${userTeam.stadiumCapacity.toLocaleString()} espectadores</div>
-      </div>
-
-      <div class="form-group" style="border-top: 1px solid var(--border-glow); padding-top:20px;">
-        <label>Definir Preço dos Ingressos (R$)</label>
-        <div style="display:flex; gap:16px; align-items:center;">
-          <input type="range" id="finance-ticket-range" min="10" max="150" value="${userTeam.ticketPrice}" style="flex-grow:1; accent-color:var(--accent-emerald);" oninput="updateTicketPriceLabel()">
-          <span style="font-size:18px; font-weight:700; width:70px; text-align:right;" id="ticket-price-val">R$ ${userTeam.ticketPrice}</span>
-        </div>
-        <span style="font-size:11px; color:var(--text-muted); margin-top:6px; display:block;">Preço alto diminui a presença da torcida. Fidelidade atual: ${userTeam.fansLoyalty}%</span>
-      </div>
-
-      <div style="border-top:1px solid var(--border-glow); padding-top:20px;">
-        <label style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:12px; display:block;">Ampliar Estádio</label>
-        <div class="form-toggle-switch">
-          <div class="toggle-btn" onclick="game.upgradeStadium(5000)">+5.000 assentos<br><span style="font-size:11px; color:var(--accent-gold);">R$ 6.000.000</span></div>
-          <div class="toggle-btn" onclick="game.upgradeStadium(10000)">+10.000 assentos<br><span style="font-size:11px; color:var(--accent-gold);">R$ 12.000.000</span></div>
-          <div class="toggle-btn" onclick="game.upgradeStadium(20000)">+20.000 assentos<br><span style="font-size:11px; color:var(--accent-gold);">R$ 24.000.000</span></div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Right card: Bank Loans
-  const bankCard = document.createElement("div");
-  bankCard.className = "glass-card";
-  bankCard.innerHTML = `
-    <h3 class="card-title">Financiamento & Empréstimos</h3>
+    // Add advance sign-on bonus (2 weeks fee advance)
+    const advance = offer.weeklyFee * 2;
+    game.adjustTeamBudget(userTeam, advance, 'sponsor' + currentSponsorNegotiationType.charAt(0).toUpperCase() + currentSponsorNegotiationType.slice(1));
     
-    <div style="display:flex; flex-direction:column; gap:20px;">
-      <div>
-        <span style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Dívida Acumulada</span>
-        <div style="font-size:24px; font-weight:800; color:var(--accent-rose); margin-top:4px;">${formatMoney(userTeam.loan)}</div>
-        <span style="font-size:11px; color:var(--text-muted); margin-top:4px; display:block;">Os juros semanais são de 1.0% do valor da dívida.</span>
-      </div>
-
-      <button class="btn-primary" style="margin-top:12px;" onclick="openModal('modal-bank')">Negociar com o Banco</button>
-
-      <div style="border-top:1px solid var(--border-glow); padding-top:20px;">
-        <h4 style="font-size:13px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:12px;">Previsão Semanal</h4>
-        <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
-          <div style="display:flex; justify-content:space-between;">
-            <span>Patrocínio Semanal:</span>
-            <span style="color:var(--accent-emerald);">+ ${formatMoney(userTeam.sponsorIncome)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span>Despesa com Salários:</span>
-            <span style="color:var(--accent-rose);">- ${formatMoney(userTeam.squad.reduce((sum, p) => sum + p.salary, 0))}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span>Juros Bancários:</span>
-            <span style="color:var(--accent-rose);">- ${formatMoney(userTeam.loan * 0.01)}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  wrapper.appendChild(stadiumCard);
-  wrapper.appendChild(bankCard);
-  container.appendChild(wrapper);
+    game.addNews("Novo Patrocinador", `Parceria fechada! O ${userTeam.name} assinou com o patrocinador ${offer.name} (${currentSponsorNegotiationType.toUpperCase()}) por ${offer.weeksRemaining} semanas.`);
+    closeModal("modal-sponsor-offers");
+    game.saveGame();
+    renderApp();
+  }
 }
 
 function updateTicketPriceLabel() {
@@ -1709,28 +1737,518 @@ function updateTicketPriceLabel() {
   const userTeam = game.findTeamById(game.state.manager.teamId);
   userTeam.ticketPrice = parseInt(val);
   game.saveGame();
+  
+  // Update real-time expected metrics
+  const baseRep = userTeam.reputation * 0.2 + 0.1;
+  const priceFactor = Math.max(0, 1 - (userTeam.ticketPrice - 10) / 140);
+  const loyaltyFactor = userTeam.fansLoyalty / 100;
+  const expectedAttendance = Math.min(userTeam.stadiumCapacity, Math.round(userTeam.stadiumCapacity * baseRep * priceFactor * (0.5 + loyaltyFactor * 0.5)));
+  const occupancy = Math.round((expectedAttendance / userTeam.stadiumCapacity) * 100);
+  const projectedRevenue = expectedAttendance * userTeam.ticketPrice;
+  
+  const attEl = document.getElementById("projected-attendance-val");
+  const revEl = document.getElementById("projected-revenue-val");
+  if (attEl) attEl.textContent = `${expectedAttendance.toLocaleString()} (~${occupancy}% de ocupação)`;
+  if (revEl) revEl.textContent = formatMoney(projectedRevenue);
 }
 
-function handleBorrow() {
-  const amt = parseInt(document.getElementById("bank-borrow-input").value);
-  if (isNaN(amt) || amt <= 0) {
-    alert("Digite um valor válido.");
-    return;
-  }
-  game.borrowMoney(amt);
-  closeModal("modal-bank");
-  renderApp();
+function renderLedgerTable(userTeam) {
+  const ledgerNames = {
+    ticketSales: "Bilheteria",
+    sponsorMaster: "Patrocínio Máster",
+    sponsorSleeve: "Patrocínio Manga (Sleeve)",
+    sponsorNaming: "Naming Rights Estádio",
+    tvRights: "Direitos de Transmissão",
+    playerSales: "Venda de Jogadores",
+    merchandising: "Merchandising / Loja",
+    prizeMoney: "Premiações de Campeonatos",
+    
+    playerWages: "Salários do Elenco",
+    transferFeesPaid: "Compra de Jogadores",
+    stadiumUpkeep: "Manutenção do Estádio",
+    loanInterest: "Juros de Empréstimos",
+    loanRepayments: "Pagamento de Dívidas",
+    youthAcademyUpkeep: "Despesa Categorias de Base"
+  };
+
+  const w = userTeam.financeLog.currentWeek;
+  const s = userTeam.financeLog.seasonTotal;
+
+  const totalIncomeW = w.ticketSales + w.sponsorMaster + w.sponsorSleeve + w.sponsorNaming + w.tvRights + w.playerSales + w.merchandising + w.prizeMoney;
+  const totalIncomeS = s.ticketSales + s.sponsorMaster + s.sponsorSleeve + s.sponsorNaming + s.tvRights + s.playerSales + s.merchandising + s.prizeMoney;
+
+  const totalExpenseW = w.playerWages + w.transferFeesPaid + w.stadiumUpkeep + w.loanInterest + w.loanRepayments + w.youthAcademyUpkeep;
+  const totalExpenseS = s.playerWages + s.transferFeesPaid + s.stadiumUpkeep + s.loanInterest + s.loanRepayments + s.youthAcademyUpkeep;
+
+  const netW = totalIncomeW + totalExpenseW;
+  const netS = totalIncomeS + totalExpenseS;
+
+  let html = `
+    <table class="market-table" style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border-glow); text-align:left;">
+          <th style="padding:8px 4px; color:var(--text-muted); font-weight:600;">Categoria</th>
+          <th style="padding:8px 4px; text-align:right; color:var(--text-muted); font-weight:600;">Semana Atual</th>
+          <th style="padding:8px 4px; text-align:right; color:var(--text-muted); font-weight:600;">Temporada</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="font-weight:700; color:var(--accent-cyan);"><td colspan="3" style="padding:10px 4px 4px 4px; border-bottom:1px dashed var(--border-glow);">RECEITAS</td></tr>
+  `;
+
+  const incomeKeys = ['ticketSales', 'sponsorMaster', 'sponsorSleeve', 'sponsorNaming', 'tvRights', 'playerSales', 'merchandising', 'prizeMoney'];
+  incomeKeys.forEach(k => {
+    const valW = w[k] || 0;
+    const valS = s[k] || 0;
+    if (valW > 0 || valS > 0) {
+      html += `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+          <td style="padding:6px 4px;">${ledgerNames[k]}</td>
+          <td style="padding:6px 4px; text-align:right; color:var(--accent-emerald);">+ ${formatMoney(valW)}</td>
+          <td style="padding:6px 4px; text-align:right; color:var(--accent-emerald);">+ ${formatMoney(valS)}</td>
+        </tr>
+      `;
+    }
+  });
+
+  html += `
+        <tr style="border-top:1px solid var(--border-glow); font-weight:700;">
+          <td style="padding:8px 4px;">Total Receitas</td>
+          <td style="padding:8px 4px; text-align:right; color:var(--accent-emerald);">${formatMoney(totalIncomeW)}</td>
+          <td style="padding:8px 4px; text-align:right; color:var(--accent-emerald);">${formatMoney(totalIncomeS)}</td>
+        </tr>
+        
+        <tr style="font-weight:700; color:var(--accent-rose);"><td colspan="3" style="padding:16px 4px 4px 4px; border-bottom:1px dashed var(--border-glow);">DESPESAS</td></tr>
+  `;
+
+  const expenseKeys = ['playerWages', 'transferFeesPaid', 'stadiumUpkeep', 'youthAcademyUpkeep', 'loanInterest', 'loanRepayments'];
+  expenseKeys.forEach(k => {
+    const valW = w[k] || 0;
+    const valS = s[k] || 0;
+    if (valW < 0 || valS < 0) {
+      html += `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+          <td style="padding:6px 4px;">${ledgerNames[k]}</td>
+          <td style="padding:6px 4px; text-align:right; color:var(--accent-rose);">${formatMoney(valW)}</td>
+          <td style="padding:6px 4px; text-align:right; color:var(--accent-rose);">${formatMoney(valS)}</td>
+        </tr>
+      `;
+    }
+  });
+
+  html += `
+        <tr style="border-top:1px solid var(--border-glow); font-weight:700;">
+          <td style="padding:8px 4px;">Total Despesas</td>
+          <td style="padding:8px 4px; text-align:right; color:var(--accent-rose);">${formatMoney(totalExpenseW)}</td>
+          <td style="padding:8px 4px; text-align:right; color:var(--accent-rose);">${formatMoney(totalExpenseS)}</td>
+        </tr>
+        
+        <tr style="border-top:2px double var(--border-glow); font-weight:800; font-size:13px; background:rgba(255,255,255,0.02);">
+          <td style="padding:10px 4px;">Balanço Líquido</td>
+          <td style="padding:10px 4px; text-align:right; color:${netW >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">${netW >= 0 ? '+' : ''}${formatMoney(netW)}</td>
+          <td style="padding:10px 4px; text-align:right; color:${netS >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">${netS >= 0 ? '+' : ''}${formatMoney(netS)}</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+
+  return html;
 }
 
-function handleRepay() {
-  const amt = parseInt(document.getElementById("bank-repay-input").value);
-  if (isNaN(amt) || amt <= 0) {
-    alert("Digite um valor válido.");
-    return;
+function renderStadium(container) {
+  const userTeam = game.findTeamById(game.state.manager.teamId);
+  game.initDefaultSponsorsIfMissing(userTeam);
+  game.ensureTeamFinanceLog(userTeam);
+  game.initLoansIfMissing(userTeam);
+
+  if (userTeam.weeksInDebt === undefined) userTeam.weeksInDebt = 0;
+  if (userTeam.academyLevel === undefined) userTeam.academyLevel = 2;
+
+  // Sub navigation tabs
+  const subNav = document.createElement("div");
+  subNav.style.display = "flex";
+  subNav.style.gap = "8px";
+  subNav.style.marginBottom = "20px";
+  subNav.innerHTML = `
+    <button class="tab-btn ${activeStadiumTab === 'stadium' ? 'active' : ''}" style="flex:1; padding:10px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid var(--border-glow); background:${activeStadiumTab === 'stadium' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)'}; color:${activeStadiumTab === 'stadium' ? 'var(--accent-emerald)' : 'var(--text-main)'}; cursor:pointer;" onclick="window.changeStadiumTab('stadium')">🏟️ Infraestrutura</button>
+    <button class="tab-btn ${activeStadiumTab === 'finance' ? 'active' : ''}" style="flex:1; padding:10px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid var(--border-glow); background:${activeStadiumTab === 'finance' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)'}; color:${activeStadiumTab === 'finance' ? 'var(--accent-blue)' : 'var(--text-main)'}; cursor:pointer;" onclick="window.changeStadiumTab('finance')">📊 Finanças & Banco</button>
+    <button class="tab-btn ${activeStadiumTab === 'sponsors' ? 'active' : ''}" style="flex:1; padding:10px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid var(--border-glow); background:${activeStadiumTab === 'sponsors' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.03)'}; color:${activeStadiumTab === 'sponsors' ? 'var(--accent-gold)' : 'var(--text-main)'}; cursor:pointer;" onclick="window.changeStadiumTab('sponsors')">🤝 Patrocínios & Loja</button>
+  `;
+  container.appendChild(subNav);
+
+  // Financial Alert banner if in debt
+  if (userTeam.weeksInDebt > 0) {
+    const alertDiv = document.createElement("div");
+    alertDiv.style.background = "rgba(239,68,68,0.15)";
+    alertDiv.style.border = "1px solid rgba(239,68,68,0.3)";
+    alertDiv.style.borderRadius = "8px";
+    alertDiv.style.padding = "12px 16px";
+    alertDiv.style.color = "var(--accent-rose)";
+    alertDiv.style.fontSize = "13px";
+    alertDiv.style.fontWeight = "600";
+    alertDiv.style.marginBottom = "16px";
+    alertDiv.style.display = "flex";
+    alertDiv.style.alignItems = "center";
+    alertDiv.style.gap = "8px";
+    alertDiv.innerHTML = `
+      <span>⚠️ <strong>CRISE FINANCEIRA:</strong> Seu caixa está no vermelho há ${userTeam.weeksInDebt} semanas consecutivas. Você tem até a 8ª semana para reverter a dívida antes que ocorra a punição esportiva (-6 pontos) e venda compulsória.</span>
+    `;
+    container.appendChild(alertDiv);
   }
-  game.repayLoan(amt);
-  closeModal("modal-bank");
-  renderApp();
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "grid-2";
+
+  if (activeStadiumTab === "stadium") {
+    // -------------------------------------------------------------
+    // TAB STADIUM & ACADEMY
+    // -------------------------------------------------------------
+    const leftCard = document.createElement("div");
+    leftCard.className = "glass-card";
+    
+    const upgradeStatus = userTeam.stadiumUpgrading 
+      ? `<div style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px; font-size:13px; margin-bottom:16px;">
+          🏗️ Obras em andamento! Aumentando +${userTeam.stadiumUpgradeCapacityIncrease.toLocaleString()} assentos (${userTeam.stadiumUpgradeWeeks} semanas restantes).
+         </div>`
+      : "";
+
+    // Simulated ticket pricing metrics
+    const baseRep = userTeam.reputation * 0.2 + 0.1;
+    const priceFactor = Math.max(0, 1 - (userTeam.ticketPrice - 10) / 140);
+    const loyaltyFactor = userTeam.fansLoyalty / 100;
+    const expectedAttendance = Math.min(userTeam.stadiumCapacity, Math.round(userTeam.stadiumCapacity * baseRep * priceFactor * (0.5 + loyaltyFactor * 0.5)));
+    const occupancy = Math.round((expectedAttendance / userTeam.stadiumCapacity) * 100);
+    const projectedRevenue = expectedAttendance * userTeam.ticketPrice;
+
+    leftCard.innerHTML = `
+      <h3 class="card-title">Gestão do Estádio</h3>
+      ${upgradeStatus}
+      
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <div>
+          <span style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Capacidade</span>
+          <div style="font-size:24px; font-weight:800; margin-top:4px;">${userTeam.stadiumCapacity.toLocaleString()} assentos</div>
+        </div>
+
+        <div class="form-group" style="border-top: 1px solid var(--border-glow); padding-top:20px;">
+          <label>Preço do Ingresso (R$)</label>
+          <div style="display:flex; gap:16px; align-items:center;">
+            <input type="range" id="finance-ticket-range" min="10" max="150" value="${userTeam.ticketPrice}" style="flex-grow:1; accent-color:var(--accent-emerald);" oninput="window.updateTicketPriceLabel()">
+            <span style="font-size:18px; font-weight:700; width:70px; text-align:right;" id="ticket-price-val">R$ ${userTeam.ticketPrice}</span>
+          </div>
+          <span style="font-size:11px; color:var(--text-muted); margin-top:6px; display:block;">Preço alto reduz a presença. Fidelidade da torcida: ${userTeam.fansLoyalty}%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid var(--border-glow); font-size:12px;">
+          <div>
+            <span style="color:var(--text-muted);">Público Estimado:</span>
+            <div id="projected-attendance-val" style="font-weight:700; margin-top:2px;">${expectedAttendance.toLocaleString()} (~${occupancy}% de ocupação)</div>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);">Renda Estimada:</span>
+            <div id="projected-revenue-val" style="font-weight:700; color:var(--accent-emerald); margin-top:2px;">${formatMoney(projectedRevenue)}</div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-glow); padding-top:20px;">
+          <label style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:12px; display:block;">Ampliar Estádio</label>
+          <div class="form-toggle-switch" style="display:flex; flex-direction:column; gap:8px; background:none; border:none; padding:0;">
+            <div class="toggle-btn" style="border: 1px solid var(--border-glow); border-radius:8px; padding:10px; cursor:pointer;" onclick="game.upgradeStadium(5000)">+5.000 assentos<br><span style="font-size:11px; color:var(--accent-gold); font-weight:700;">R$ 6.000.000</span></div>
+            <div class="toggle-btn" style="border: 1px solid var(--border-glow); border-radius:8px; padding:10px; cursor:pointer;" onclick="game.upgradeStadium(10000)">+10.000 assentos<br><span style="font-size:11px; color:var(--accent-gold); font-weight:700;">R$ 12.000.000</span></div>
+            <div class="toggle-btn" style="border: 1px solid var(--border-glow); border-radius:8px; padding:10px; cursor:pointer;" onclick="game.upgradeStadium(20000)">+20.000 assentos<br><span style="font-size:11px; color:var(--accent-gold); font-weight:700;">R$ 24.000.000</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const rightCard = document.createElement("div");
+    rightCard.className = "glass-card";
+    
+    const nextUpgradeCost = [0, 0, 1500000, 6000000, 18000000][userTeam.academyLevel + 1];
+    const upgradeButtonText = userTeam.academyLevel >= 4 
+      ? "Nível Máximo Atingido" 
+      : `Melhorar Infraestrutura (R$ ${nextUpgradeCost.toLocaleString()})`;
+
+    const recruitCooldown = game.state.youthAcademyTimer;
+    const recruitButton = recruitCooldown > 0
+      ? `<button class="btn-primary" style="background:#4b5563; border-color:#4b5563; cursor:not-allowed;" disabled>Recrutar da Base (${recruitCooldown} sem. restantes)</button>`
+      : `<button class="btn-primary" onclick="game.pullYouthAcademy()">Recrutar Promessa (${formatMoney(userTeam.academyLevel === 1 ? 500000 : userTeam.academyLevel === 2 ? 1500000 : userTeam.academyLevel === 3 ? 3500000 : 8000000)})</button>`;
+
+    rightCard.innerHTML = `
+      <h3 class="card-title">Categorias de Base</h3>
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <div>
+          <span style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Nível de Instalações</span>
+          <div style="font-size:24px; font-weight:800; color:var(--accent-cyan); margin-top:4px;">${game.getAcademyLevelName(userTeam.academyLevel)}</div>
+          <span style="font-size:11px; color:var(--text-muted); margin-top:4px; display:block;">Manutenção semanal da base: ${formatMoney(userTeam.academyLevel === 1 ? 50000 : userTeam.academyLevel === 2 ? 150000 : userTeam.academyLevel === 3 ? 350000 : 600000)}</span>
+        </div>
+
+        <div style="border-top:1px solid var(--border-glow); padding-top:20px;">
+          <label style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:8px; display:block;">Alterar Categoria de Base</label>
+          <div style="display:flex; gap:8px;">
+            <select id="academy-level-selector" class="form-control" style="flex:1;">
+              <option value="1" ${userTeam.academyLevel === 1 ? 'selected' : ''}>Básica (Manutenção: R$ 50 mil/sem | Nível f:45-65)</option>
+              <option value="2" ${userTeam.academyLevel === 2 ? 'selected' : ''}>Aprimorada (Manutenção: R$ 150 mil/sem | Nível f:55-75)</option>
+              <option value="3" ${userTeam.academyLevel === 3 ? 'selected' : ''}>Excelente (Manutenção: R$ 350 mil/sem | Nível f:65-82)</option>
+              <option value="4" ${userTeam.academyLevel === 4 ? 'selected' : ''}>Classe Mundial (Manutenção: R$ 600 mil/sem | Nível f:72-88)</option>
+            </select>
+            <button class="btn-primary" style="width:auto; padding:0 16px; font-size:13px;" onclick="window.handleSetAcademyLevel()">Confirmar</button>
+          </div>
+          <span style="font-size:11px; color:var(--text-muted); margin-top:6px; display:block;">Melhorar o nível exige investimento imediato. Reduzir o nível é gratuito e economiza custos de manutenção semanais.</span>
+        </div>
+
+        <div style="border-top:1px solid var(--border-glow); padding-top:20px; display:flex; flex-direction:column; gap:12px;">
+          ${recruitButton}
+          ${userTeam.academyLevel < 4 ? `<button class="btn-secondary" style="border-color:var(--accent-cyan); color:var(--accent-cyan);" onclick="window.handleUpgradeAcademy()">${upgradeButtonText}</button>` : ""}
+        </div>
+      </div>
+    `;
+
+    wrapper.appendChild(leftCard);
+    wrapper.appendChild(rightCard);
+
+  } else if (activeStadiumTab === "finance") {
+    // -------------------------------------------------------------
+    // TAB FINANCE & LEDGER & BANKS
+    // -------------------------------------------------------------
+    const leftCard = document.createElement("div");
+    leftCard.className = "glass-card";
+    leftCard.style.padding = "20px";
+    leftCard.innerHTML = `
+      <h3 class="card-title" style="margin-bottom:16px;">Demonstrativo Financeiro (P&L)</h3>
+      ${renderLedgerTable(userTeam)}
+    `;
+
+    const rightCard = document.createElement("div");
+    rightCard.className = "glass-card";
+    
+    // Calculate bank limits based on reputation
+    const rep = userTeam.reputation || 3.0;
+    const limitPopular = Math.round(rep * 2000000);
+    const limitComercial = Math.round(rep * 5000000);
+    const limitShark = Math.round(rep * 12000000);
+
+    rightCard.innerHTML = `
+      <h3 class="card-title">Linhas de Crédito & Bancos</h3>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        
+        <div>
+          <span style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Dívida Bancária Total</span>
+          <div style="font-size:24px; font-weight:800; color:${userTeam.loan > 0 ? 'var(--accent-rose)' : 'var(--text-main)'}; margin-top:4px;">${formatMoney(userTeam.loan)}</div>
+          <span style="font-size:11px; color:var(--text-muted); margin-top:4px; display:block;">O limite máximo de endividamento do clube é de ${formatMoney(limitShark)}.</span>
+        </div>
+
+        <!-- 1. Banco Popular -->
+        <div style="border-top:1px solid var(--border-glow); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--text-main); font-size:13px;">1. Banco do Povo (Crédito Social)</strong>
+              <div style="font-size:11px; color:var(--text-muted);">Juros: <span style="color:var(--accent-emerald);">0.5% / semana</span> | Limite: ${formatMoney(limitPopular)}</div>
+            </div>
+            <span class="badge" style="background:rgba(16,185,129,0.1); color:var(--accent-emerald); font-weight:700;">Dívida: ${formatMoney(userTeam.loans.popular || 0)}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+            <div style="display:flex; gap:4px;">
+              <input type="number" id="input-borrow-popular" class="form-control" style="font-size:12px; padding:6px;" placeholder="Pegar R$">
+              <button class="btn-primary" style="padding:6px 10px; font-size:12px; width:auto;" onclick="window.handleBankBorrow('popular')">Pegar</button>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <input type="number" id="input-repay-popular" class="form-control" style="font-size:12px; padding:6px;" placeholder="Pagar R$">
+              <button class="btn-secondary" style="padding:6px 10px; font-size:12px; width:auto; border-color:var(--accent-rose); color:var(--accent-rose);" onclick="window.handleBankRepay('popular')">Pagar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Banco Comercial -->
+        <div style="border-top:1px solid var(--border-glow); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--text-main); font-size:13px;">2. Banco Comercial Nacional</strong>
+              <div style="font-size:11px; color:var(--text-muted);">Juros: <span style="color:var(--accent-blue);">0.9% / semana</span> | Limite: ${formatMoney(limitComercial)}</div>
+            </div>
+            <span class="badge" style="background:rgba(59,130,246,0.1); color:var(--accent-blue); font-weight:700;">Dívida: ${formatMoney(userTeam.loans.comercial || 0)}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+            <div style="display:flex; gap:4px;">
+              <input type="number" id="input-borrow-comercial" class="form-control" style="font-size:12px; padding:6px;" placeholder="Pegar R$">
+              <button class="btn-primary" style="padding:6px 10px; font-size:12px; width:auto; background:var(--accent-blue); border-color:var(--accent-blue);" onclick="window.handleBankBorrow('comercial')">Pegar</button>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <input type="number" id="input-repay-comercial" class="form-control" style="font-size:12px; padding:6px;" placeholder="Pagar R$">
+              <button class="btn-secondary" style="padding:6px 10px; font-size:12px; width:auto; border-color:var(--accent-rose); color:var(--accent-rose);" onclick="window.handleBankRepay('comercial')">Pagar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Shark Capital -->
+        <div style="border-top:1px solid var(--border-glow); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--text-main); font-size:13px;">3. Shark Capital (Investment Fund)</strong>
+              <div style="font-size:11px; color:var(--text-muted);">Juros: <span style="color:var(--accent-rose);">1.8% / semana</span> | Limite: ${formatMoney(limitShark)}</div>
+            </div>
+            <span class="badge" style="background:rgba(239,68,68,0.1); color:var(--accent-rose); font-weight:700;">Dívida: ${formatMoney(userTeam.loans.shark || 0)}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+            <div style="display:flex; gap:4px;">
+              <input type="number" id="input-borrow-shark" class="form-control" style="font-size:12px; padding:6px;" placeholder="Pegar R$">
+              <button class="btn-primary" style="padding:6px 10px; font-size:12px; width:auto; background:var(--accent-rose); border-color:var(--accent-rose);" onclick="window.handleBankBorrow('shark')">Pegar</button>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <input type="number" id="input-repay-shark" class="form-control" style="font-size:12px; padding:6px;" placeholder="Pagar R$">
+              <button class="btn-secondary" style="padding:6px 10px; font-size:12px; width:auto; border-color:var(--accent-rose); color:var(--accent-rose);" onclick="window.handleBankRepay('shark')">Pagar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    wrapper.appendChild(leftCard);
+    wrapper.appendChild(rightCard);
+
+  } else if (activeStadiumTab === "sponsors") {
+    // -------------------------------------------------------------
+    // TAB SPONSORS & MERCHANDISING
+    // -------------------------------------------------------------
+    const leftCard = document.createElement("div");
+    leftCard.className = "glass-card";
+    
+    // Master sponsor slot status
+    const mActive = userTeam.sponsors.master && userTeam.sponsors.master.weeksRemaining > 0;
+    const masterSlot = mActive
+      ? `<div style="border: 1px solid var(--border-glow); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between;">
+            <strong style="color:var(--accent-cyan); font-size:14px;">${userTeam.sponsors.master.name} (Máster)</strong>
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-weight:700;">${userTeam.sponsors.master.weeksRemaining} sem. restantes</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); display:grid; grid-template-columns:1fr 1fr; gap:6px; border-top:1px dashed var(--border-glow); padding-top:6px; margin-top:4px;">
+            <div>Semanal: <strong>${formatMoney(userTeam.sponsors.master.weeklyFee)}</strong></div>
+            <div>Bônus Vitória: <strong>${userTeam.sponsors.master.winBonus > 0 ? formatMoney(userTeam.sponsors.master.winBonus) : "Nenhum"}</strong></div>
+            <div style="grid-column:span 2;">Bônus de Título: <strong>${userTeam.sponsors.master.titleBonus > 0 ? formatMoney(userTeam.sponsors.master.titleBonus) : "Nenhum"}</strong></div>
+          </div>
+        </div>`
+      : `<div style="border: 1px dashed var(--accent-rose); border-radius:8px; padding:12px; text-align:center;">
+          <div style="color:var(--accent-rose); font-weight:700; font-size:13px; margin-bottom:8px;">⚠️ SEM PATROCINADOR MÁSTER</div>
+          <button class="btn-primary" style="padding:6px 12px; font-size:12px; width:auto;" onclick="window.openSponsorNegotiation('master')">Negociar Patrocínio Máster</button>
+        </div>`;
+
+    // Sleeve sponsor slot status
+    const slActive = userTeam.sponsors.sleeve && userTeam.sponsors.sleeve.weeksRemaining > 0;
+    const sleeveSlot = slActive
+      ? `<div style="border: 1px solid var(--border-glow); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between;">
+            <strong style="color:var(--accent-cyan); font-size:14px;">${userTeam.sponsors.sleeve.name} (Manga)</strong>
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-weight:700;">${userTeam.sponsors.sleeve.weeksRemaining} sem. restantes</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); display:grid; grid-template-columns:1fr 1fr; gap:6px; border-top:1px dashed var(--border-glow); padding-top:6px; margin-top:4px;">
+            <div>Semanal: <strong>${formatMoney(userTeam.sponsors.sleeve.weeklyFee)}</strong></div>
+            <div>Bônus Vitória: <strong>${userTeam.sponsors.sleeve.winBonus > 0 ? formatMoney(userTeam.sponsors.sleeve.winBonus) : "Nenhum"}</strong></div>
+          </div>
+        </div>`
+      : `<div style="border: 1px dashed var(--accent-rose); border-radius:8px; padding:12px; text-align:center;">
+          <div style="color:var(--accent-rose); font-weight:700; font-size:13px; margin-bottom:8px;">⚠️ SEM PATROCINADOR DE MANGA</div>
+          <button class="btn-primary" style="padding:6px 12px; font-size:12px; width:auto; background:var(--accent-blue); border-color:var(--accent-blue);" onclick="window.openSponsorNegotiation('sleeve')">Negociar Patrocínio Manga</button>
+        </div>`;
+
+    // Stadium Naming sponsor slot status
+    const nActive = userTeam.sponsors.stadium && userTeam.sponsors.stadium.weeksRemaining > 0;
+    const namingSlot = nActive
+      ? `<div style="border: 1px solid var(--border-glow); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between;">
+            <strong style="color:var(--accent-cyan); font-size:14px;">${userTeam.sponsors.stadium.name} (Naming Rights)</strong>
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-weight:700;">${userTeam.sponsors.stadium.weeksRemaining} sem. restantes</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); display:grid; grid-template-columns:1fr 1fr; gap:6px; border-top:1px dashed var(--border-glow); padding-top:6px; margin-top:4px;">
+            <div>Semanal: <strong>${formatMoney(userTeam.sponsors.stadium.weeklyFee)}</strong></div>
+            <div style="grid-column:span 2;">Bônus de Título: <strong>${userTeam.sponsors.stadium.titleBonus > 0 ? formatMoney(userTeam.sponsors.stadium.titleBonus) : "Nenhum"}</strong></div>
+          </div>
+        </div>`
+      : `<div style="border: 1px dashed var(--accent-rose); border-radius:8px; padding:12px; text-align:center;">
+          <div style="color:var(--accent-rose); font-weight:700; font-size:13px; margin-bottom:8px;">⚠️ SEM CONTRATO DE NAMING RIGHTS</div>
+          <button class="btn-primary" style="padding:6px 12px; font-size:12px; width:auto; background:var(--accent-gold); border-color:var(--accent-gold);" onclick="window.openSponsorNegotiation('stadium')">Negociar Naming Rights</button>
+        </div>`;
+
+    leftCard.innerHTML = `
+      <h3 class="card-title">Parcerias e Patrocínios</h3>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        ${masterSlot}
+        ${sleeveSlot}
+        ${namingSlot}
+      </div>
+    `;
+
+    const rightCard = document.createElement("div");
+    rightCard.className = "glass-card";
+
+    // Merchandising / Superstars evaluation
+    let superstarsHtml = "";
+    userTeam.squad.forEach(p => {
+      if (p.rating >= 90) {
+        superstarsHtml += `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.02);"><span>⭐ ${p.name} (${p.position})</span><span style="color:var(--accent-cyan); font-weight:700;">+15% vendas</span></div>`;
+      } else if (p.rating >= 83) {
+        superstarsHtml += `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.02);"><span>⭐ ${p.name} (${p.position})</span><span style="color:var(--accent-cyan);">+5% vendas</span></div>`;
+      }
+    });
+
+    if (superstarsHtml === "") {
+      superstarsHtml = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px 0;">Nenhum jogador superstar no elenco (Força >= 83) para engajar a torcida.</div>`;
+    }
+
+    // Streak hype evaluation
+    let streakText = "Nenhum bônus ativo";
+    let streakColor = "var(--text-muted)";
+    if (userTeam.form && userTeam.form.length > 0) {
+      const lastForm = userTeam.form[userTeam.form.length - 1];
+      if (lastForm === 'W') {
+        const wins = userTeam.form.filter(f => f === 'W').length;
+        if (wins >= 3) {
+          streakText = `🔥 Alta Demanda! Sequência vitoriosa (+45% vendas)`;
+          streakColor = "var(--accent-gold)";
+        } else {
+          streakText = `📈 Hype Positivo! Vitória na última rodada (+20% vendas)`;
+          streakColor = "var(--accent-emerald)";
+        }
+      } else if (lastForm === 'L') {
+        streakText = `📉 Queda de Vendas! Derrota na última rodada (-10% vendas)`;
+        streakColor = "var(--accent-rose)";
+      }
+    }
+
+    rightCard.innerHTML = `
+      <h3 class="card-title">Marketing & Merchandising</h3>
+      <div style="display:flex; flex-direction:column; gap:16px; font-size:13px;">
+        
+        <div>
+          <span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Engajamento de Fãs</span>
+          <div style="font-weight:700; margin-top:2px;">Fidelidade Atual: <span style="color:var(--accent-emerald);">${userTeam.fansLoyalty}%</span></div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-glow); padding-top:12px;">
+          <span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; display:block; margin-bottom:6px;">Impacto de Resultados</span>
+          <div style="font-weight:700; color:${streakColor};">${streakText}</div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-glow); padding-top:12px;">
+          <span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; display:block; margin-bottom:8px;">Jogadores Populares (Superstars)</span>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            ${superstarsHtml}
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-glow); padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Vendas de Produtos na Temporada:</span>
+          <strong style="color:var(--accent-emerald); font-size:15px;">${formatMoney(userTeam.financeLog.seasonTotal.merchandising)}</strong>
+        </div>
+
+      </div>
+    `;
+
+    wrapper.appendChild(leftCard);
+    wrapper.appendChild(rightCard);
+  }
+
+  container.appendChild(wrapper);
 }
 
 // Render History (Histórico) View
@@ -1896,7 +2414,8 @@ function handlePlayNextMatch() {
     // Render other live matches placeholder list
     renderOtherLiveMatchesList();
 
-    // Start Clock Tick
+    // Reset end flag and Start Clock Tick
+    matchEndHandled = false;
     startMatchTimer();
   }
 }
@@ -1911,8 +2430,8 @@ function renderOtherLiveMatchesList() {
   allMatches.forEach(m => {
     if (m.homeId === userMatch.homeId && m.awayId === userMatch.awayId) return;
 
-    const home = game.findTeamById(m.homeId);
-    const away = game.findTeamById(m.awayId);
+    const home = game.findTeamById(m.homeId) || { name: m.homeId || "A definir" };
+    const away = game.findTeamById(m.awayId) || { name: m.awayId || "A definir" };
 
     const row = document.createElement("div");
     row.className = "sidebar-live-match-row";
@@ -1940,21 +2459,28 @@ function updateOtherLiveMatchesScores() {
   });
 }
 
+let matchEndHandled = false;
+
 function startMatchTimer() {
   // Clear any existing interval
   if (game.matchInterval) {
     clearInterval(game.matchInterval);
+    game.matchInterval = null;
   }
 
   const delay = matchSimSpeed === 1 ? 1500 : (matchSimSpeed === 3 ? 500 : 150);
 
   game.matchInterval = setInterval(() => {
+    if (!game.currentMatch) {
+      clearInterval(game.matchInterval);
+      game.matchInterval = null;
+      return;
+    }
+
     game.tickMatch();
     
-    // Update live match UI
-    if (!game.currentMatch) return; // match ended
-
     const match = game.currentMatch;
+    if (!match) return;
     
     document.getElementById("match-live-timer").textContent = `${match.minute}'`;
     document.getElementById("match-live-score").textContent = `${match.scoreHome} - ${match.scoreAway}`;
@@ -1976,16 +2502,26 @@ function startMatchTimer() {
     // Update other round scores
     updateOtherLiveMatchesScores();
 
-    if (match.minute >= 90) {
+    if (match.minute >= 90 && !matchEndHandled) {
+      matchEndHandled = true;
       clearInterval(game.matchInterval);
       game.matchInterval = null;
+      
+      // Save reference before endMatch nullifies currentMatch
+      const homeName = match.homeTeam.name;
+      const awayName = match.awayTeam.name;
+      const sH = match.scoreHome;
+      const sA = match.scoreAway;
+      
       setTimeout(() => {
-        alert(`Fim de jogo! Resultado final: ${match.homeTeam.name} ${match.scoreHome} x ${match.scoreAway} ${match.awayTeam.name}`);
-        game.endMatch();
-        // Hide match overlay, show app
-        document.getElementById("match-screen").style.display = "none";
-        document.getElementById("app-container").style.display = "flex";
-      }, 1000);
+        showCustomAlert(`Fim de jogo! Resultado final: ${homeName} ${sH} x ${sA} ${awayName}`, "Fim de Jogo", () => {
+          game.endMatch();
+          document.getElementById("match-screen").style.display = "none";
+          document.getElementById("app-container").style.display = "flex";
+          matchEndHandled = false;
+          renderApp();
+        });
+      }, 800);
     }
   }, delay);
 }
@@ -1998,6 +2534,7 @@ function pauseMatchSim() {
 }
 
 window.pauseMatchSim = pauseMatchSim; // expose globally for engine
+window.startMatchTimer = startMatchTimer; // expose globally for engine
 
 function setMatchSimSpeed(speed) {
   matchSimSpeed = speed;
@@ -2017,7 +2554,8 @@ function setMatchSimSpeed(speed) {
 
 function skipMatchSim() {
   pauseMatchSim();
-  if (game.currentMatch) {
+  if (game.currentMatch && !matchEndHandled) {
+    matchEndHandled = true;
     // Jump minute to 90 and finish immediately
     const match = game.currentMatch;
     while (match.minute < 90) {
@@ -2033,11 +2571,20 @@ function skipMatchSim() {
     document.getElementById("match-live-timer").textContent = "90'";
     updateOtherLiveMatchesScores();
 
+    // Save references before endMatch nullifies them
+    const homeName = match.homeTeam.name;
+    const awayName = match.awayTeam.name;
+    const sH = match.scoreHome;
+    const sA = match.scoreAway;
+
     setTimeout(() => {
-      alert(`Resultado Final: ${match.homeTeam.name} ${match.scoreHome} x ${match.scoreAway} ${match.awayTeam.name}`);
-      game.endMatch();
-      document.getElementById("match-screen").style.display = "none";
-      document.getElementById("app-container").style.display = "flex";
+      showCustomAlert(`Resultado Final: ${homeName} ${sH} x ${sA} ${awayName}`, "Fim de Jogo", () => {
+        game.endMatch();
+        document.getElementById("match-screen").style.display = "none";
+        document.getElementById("app-container").style.display = "flex";
+        matchEndHandled = false;
+        renderApp();
+      });
     }, 500);
   }
 }
@@ -2153,6 +2700,25 @@ function closeModal(modalId) {
     startMatchTimer();
   }
 }
+
+function showCustomAlert(message, title = "Aviso", callback = null) {
+  const msgStr = String(message);
+  document.getElementById("modal-alert-title").textContent = title;
+  document.getElementById("modal-alert-message").innerHTML = msgStr.replace(/\n/g, "<br>");
+  
+  const btn = document.getElementById("modal-alert-btn");
+  btn.onclick = function() {
+    closeModal("modal-alert");
+    if (callback) callback();
+  };
+  
+  openModal("modal-alert");
+}
+
+window.showCustomAlert = showCustomAlert;
+window.alert = function(msg) {
+  showCustomAlert(msg);
+};
 
 // ----------------------------------------------------
 // NEWS & TRANSFERS OFFER INTERACTIVE COMPONENT
