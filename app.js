@@ -598,6 +598,11 @@ function toggleBenchReserve(playerId) {
 }
 
 // Open slot swap modal
+// Mobile menu toggle for responsive layout
+function toggleMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('active');
+}
 let activeSwapStarterIdx = null;
 
 function openSwapSlotModal(starterIdx) {
