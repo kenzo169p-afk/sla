@@ -1136,3 +1136,32 @@ table.premium-table tr:hover td {
   border-color: var(--accent-cyan);
   color: white;
 }
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  /* Sidebar overlay */
+  #sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    height: 100vh;
+    width: 260px;
+    background: var(--bg-secondary);
+    transition: left var(--transition-smooth);
+    z-index: 2500;
+  }
+  #sidebar.active { left: 0; }
+  /* Show mobile menu button */
+  #mobile-menu-btn { display: inline-flex; }
+  /* Adjust layout */
+  #app-container { flex-direction: column; }
+  #main-content { width: 100%; }
+  #header-bar { justify-content: space-between; }
+  /* Grid adjustments */
+  .grid-main-dashboard, .grid-2, .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .glass-card { margin-bottom: 16px; }
+}
+/* Hide mobile menu button on larger screens */
+#mobile-menu-btn { display: none; }
