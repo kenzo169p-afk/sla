@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brasfoot Global - Football Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 1. WELCOME SCREEN / CARREIRA SETUP -->
+  <div id="welcome-screen">
+    <div class="welcome-box">
+      <svg viewBox="0 0 24 24" style="width: 50px; height: 50px; fill: #10b981; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+      </svg>
+      <h1>BRASFOOT GLOBAL</h1>
+      <p class="subtitle">Simulador de Futebol de Carreira Profissional</p>
+
+      <form id="new-game-form" onsubmit="handleStartNewGame(event)">
+        <div class="form-group">
+          <label for="mgr-name">Nome do Treinador</label>
+          <input type="text" id="mgr-name" class="form-control" placeholder="Seu nome" required>
+        </div>
+
+        <div class="form-group">
+          <label for="mgr-nat">Nacionalidade</label>
+          <select id="mgr-nat" class="form-control">
+            <option value="Brazilian">Brasileiro</option>
+            <option value="English">Inglês</option>
+            <option value="Spanish">Espanhol</option>
+            <option value="Argentinian">Argentino</option>
+            <option value="German">Alemão</option>
+            <option value="French">Francês</option>
+            <option value="Italian">Italiano</option>
+            <option value="Portuguese">Português</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="select-league">Escolher Liga</label>
+          <select id="select-league" class="form-control" onchange="updateTeamDropdown()"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="select-team">Escolher Time</label>
+          <select id="select-team" class="form-control"></select>
+        </div>
+
+        <button type="submit" class="btn-primary" style="margin-top: 10px; margin-bottom: 12px;">Iniciar Nova Carreira</button>
+      </form>
+
+      <button id="btn-load-game" class="btn-secondary" onclick="handleLoadGame()">Carregar Jogo Salvo</button>
+    </div>
+  </div>
+
+  <!-- 2. MAIN APPLICATION LAYOUT -->
+  <div id="app-container" style="display: none;">
+    <!-- Sidebar navigation -->
+    <div id="sidebar">
+      <div class="logo-container">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+        <h1>BRASFOOT</h1>
+      </div>
+
+      <div class="nav-links">
+        <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Escritório
+        </div>
+        <div class="nav-item" data-tab="squad" onclick="switchTab('squad')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Elenco
+        </div>
+        <div class="nav-item" data-tab="tactics" onclick="switchTab('tactics')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+          Tática
+        </div>
+        <div class="nav-item" data-tab="tables" onclick="switchTab('tables')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><line x1="5" y1="6" x2="5.01" y2="6"/><line x1="5" y1="12" x2="5.01" y2="12"/><line x1="5" y1="18" x2="5.01" y2="18"/></svg>
+          Classificação
+        </div>
+        <div class="nav-item" data-tab="market" onclick="switchTab('market')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Mercado da Bola
+        </div>
+        <div class="nav-item" data-tab="stadium" onclick="switchTab('stadium')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 22s1.25-1.9 4.38-1.9 5.62 3.8 8.75 3.8 4.38-1.9 4.38-1.9"/><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+          Estádio & Caixa
+        </div>
+        <div class="nav-item" data-tab="news" onclick="switchTab('news')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l5 5v11a2 2 0 0 1-2 2z"/><polyline points="14 3 14 8 19 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Notícias
+        </div>
+        <div class="nav-item" data-tab="history" onclick="switchTab('history')">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          Histórico
+        </div>
+      </div>
+
+      <div class="manager-card" id="sidebar-manager-panel">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div id="main-content">
+      <!-- Header bar with weekly actions -->
+      <div id="header-bar">
+        <div class="header-time-info">
+          <div class="time-badge" id="header-week-badge">
+            Temporada <span>1</span> | Semana <span>1</span>
+          </div>
+        </div>
+        <button class="header-action-btn" onclick="handlePlayNextMatch()">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;"><path d="M8 5v14l11-7z"/></svg>
+          Jogar Próxima Partida
+        </button>
+      </div>
+
+      <!-- Scrollable content screens -->
+      <div class="screen-container" id="screen-renderer">
+        <!-- Views rendered here dynamically based on game.activeTab -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. INTERACTIVE MATCH SIMULATOR SCREEN Overlay -->
+  <div id="match-screen" style="display: none;">
+    <div class="match-header">
+      <div class="match-header-team left">
+        <span class="match-header-team-name" id="match-team-home-name">Casa</span>
+        <div class="team-shield-icon" id="match-team-home-shield" style="width: 44px; height: 44px;"></div>
+      </div>
+      <div class="match-header-score-center">
+        <span class="match-live-timer" id="match-live-timer">1'</span>
+        <span class="match-live-score" id="match-live-score">0 - 0</span>
+      </div>
+      <div class="match-header-team right">
+        <div class="team-shield-icon" id="match-team-away-shield" style="width: 44px; height: 44px;"></div>
+        <span class="match-header-team-name" id="match-team-away-name">Fora</span>
+      </div>
+    </div>
+
+    <div class="match-live-body">
+      <!-- Live commentary -->
+      <div class="match-commentary-panel">
+        <h3 style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          Comentários ao Vivo
+          <span style="font-size: 13px; font-weight: normal; color: var(--text-muted);" id="match-live-stats-bar">Chutes: 0 x 0</span>
+        </h3>
+        <div class="commentary-log" id="match-commentary-log">
+          <!-- Live updates feed here -->
+        </div>
+      </div>
+
+      <!-- Other match scores in the division -->
+      <div class="match-sidebar-scores">
+        <h3 style="border-bottom: 1px solid var(--border-glow); padding-bottom: 8px;">Resultados da Rodada</h3>
+        <div id="match-live-other-scores" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Other games scores in real time -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Match control options footer -->
+    <div class="match-footer-controls">
+      <div class="match-sim-layout-controls">
+        <button class="sim-speed-btn active" id="btn-speed-1x" onclick="setMatchSimSpeed(1)">Normal 1x</button>
+        <button class="sim-speed-btn" id="btn-speed-3x" onclick="setMatchSimSpeed(3)">Rápido 3x</button>
+        <button class="sim-speed-btn" id="btn-speed-10x" onclick="setMatchSimSpeed(10)">Super Rápido 10x</button>
+        <button class="sim-speed-btn" onclick="skipMatchSim()">Pular Para o Fim</button>
+      </div>
+
+      <!-- Mid-game tactical manager adjustments -->
+      <div class="match-sim-layout-controls" style="gap: 16px;">
+        <div style="display: flex; gap: 4px;">
+          <button class="match-quick-tactic-btn" id="quick-tactic-defensive" onclick="changeMatchMentality('defensive')">Defensivo</button>
+          <button class="match-quick-tactic-btn active" id="quick-tactic-balanced" onclick="changeMatchMentality('balanced')">Equilibrado</button>
+          <button class="match-quick-tactic-btn" id="quick-tactic-offensive" onclick="changeMatchMentality('offensive')">Ofensivo</button>
+        </div>
+
+        <button class="btn-primary" style="width: auto; padding: 10px 20px; font-size: 13px;" onclick="openMatchSubModal()">Realizar Substituição</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODALS & DIALOGS -->
+  <!-- A. Swap/Select Field Player Modal -->
+  <div class="modal-overlay" id="modal-select-player">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Substituir Jogador</span>
+        <button onclick="closeModal('modal-select-player')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="modal-select-player-list">
+        <!-- Render squad roster slots here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- B. Player Detail / Contract Renewal Modal -->
+  <div class="modal-overlay" id="modal-player-detail">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="detail-player-name">Ficha Técnica</span>
+        <button onclick="closeModal('modal-player-detail')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="modal-player-detail-content">
+        <!-- Detailed content here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- C. Bid / Negotiation Modal -->
+  <div class="modal-overlay" id="modal-negotiate">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <span id="neg-player-title">Negociar Contratação</span>
+        <button onclick="closeModal('modal-negotiate')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="modal-negotiate-body">
+        <!-- Interactive bidding form here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- D. Loan / Repay Modal -->
+  <div class="modal-overlay" id="modal-bank">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Banco Central - Financiamentos</span>
+        <button onclick="closeModal('modal-bank')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div class="form-group">
+        <label>Pegar Empréstimo</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="number" id="bank-borrow-input" class="form-control" placeholder="Valor (R$)">
+          <button class="btn-primary" style="width: auto; white-space: nowrap;" onclick="handleBorrow()">Pegar</button>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 24px;">
+        <label>Pagar Empréstimo</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="number" id="bank-repay-input" class="form-control" placeholder="Valor (R$)">
+          <button class="btn-primary" style="width: auto; white-space: nowrap; background: var(--accent-blue);" onclick="handleRepay()">Pagar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E. Mid-Game Roster Substitution Modal -->
+  <div class="modal-overlay" id="modal-match-sub">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Fazer Substituição</span>
+        <button onclick="closeModal('modal-match-sub')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div class="form-group">
+        <label>Escolher Titular a Sair</label>
+        <select id="match-sub-out-select" class="form-control" onchange="updateMatchSubReserveDropdown()"></select>
+      </div>
+      <div class="form-group">
+        <label>Escolher Reserva a Entrar</label>
+        <select id="match-sub-in-select" class="form-control"></select>
+      </div>
+      <button class="btn-primary" onclick="confirmMatchSubstitution()">Confirmar Substituição</button>
+    </div>
+  </div>
+
+  <!-- F. Pending Sale Offer Modal -->
+  <div class="modal-overlay" id="modal-pending-offer">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <span>Proposta Oficial Recebida</span>
+        <button onclick="closeModal('modal-pending-offer')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="modal-pending-offer-body" style="padding: 20px 0 10px 0;">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
