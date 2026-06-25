@@ -1731,6 +1731,37 @@ function openSponsorNegotiation(type) {
   titleEl.textContent = `Propostas: ${typeNames[type]}`;
   
   let html = `<div style="display:flex; flex-direction:column; gap:16px;">`;
+
+  // Display feedback message based on board confidence multiplier
+  const firstOffer = currentSponsorOffers[0];
+  if (firstOffer && firstOffer.multiplier !== undefined) {
+    const multPercent = Math.round((firstOffer.multiplier - 1.0) * 100);
+    const confidence = firstOffer.confidence;
+    let bannerHtml = "";
+    if (multPercent > 0) {
+      bannerHtml = `
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--accent-emerald); display: flex; align-items: center; gap: 10px; line-height: 1.4;">
+          <span style="font-size: 18px;">📈</span>
+          <span><strong>Parceria em Alta!</strong> Com o ótimo desempenho do clube e a alta confiança da diretoria (${confidence}%), as marcas estão oferecendo propostas <strong>+${multPercent}% superiores</strong>!</span>
+        </div>
+      `;
+    } else if (multPercent < 0) {
+      bannerHtml = `
+        <div style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.2); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--accent-rose); display: flex; align-items: center; gap: 10px; line-height: 1.4;">
+          <span style="font-size: 18px;">📉</span>
+          <span><strong>Parceria Desvalorizada!</strong> Devido ao momento instável do clube e à baixa confiança da diretoria (${confidence}%), as propostas oferecidas estão <strong>${multPercent}% desvalorizadas</strong>. Melhore sua campanha para atrair melhores contratos!</span>
+        </div>
+      `;
+    } else {
+      bannerHtml = `
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glow); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 10px; line-height: 1.4;">
+          <span style="font-size: 18px;">ℹ️</span>
+          <span>Propostas padrão baseadas na reputação atual do clube. (Confiança da diretoria: ${confidence}%).</span>
+        </div>
+      `;
+    }
+    html = bannerHtml + html;
+  }
   
   currentSponsorOffers.forEach((offer, index) => {
     html += `

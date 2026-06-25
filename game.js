@@ -3804,6 +3804,14 @@ class GameEngine {
     if (isSecondDiv) {
       rep = rep * 0.35;
     }
+    
+    // Get board confidence to calculate multiplier
+    const confidence = this.state.manager.boardConfidence !== undefined ? this.state.manager.boardConfidence : 80;
+    // Base is 80% confidence -> multiplier is 1.0
+    // If confidence is high (up to 100%), multiplier goes up to 1.25
+    // If confidence is low (down to 10%), multiplier drops to 0.125
+    const multiplier = Math.max(0.1, Math.min(1.3, 0.5 + (confidence - 40) / 80));
+
     const offers = [];
     
     for (let i = 0; i < 3; i++) {
@@ -3821,50 +3829,50 @@ class GameEngine {
       if (type === "master") {
         weeksRemaining = [40, 45, 80][i];
         if (i === 0) {
-          weeklyFee = Math.round(rep * 135000 * (0.95 + Math.random() * 0.1));
-          winBonus = Math.round(rep * 10000 * (0.9 + Math.random() * 0.2));
-          titleBonus = Math.round(rep * 400000 * (0.8 + Math.random() * 0.4));
+          weeklyFee = Math.round(rep * 135000 * (0.95 + Math.random() * 0.1) * multiplier);
+          winBonus = Math.round(rep * 10000 * (0.9 + Math.random() * 0.2) * multiplier);
+          titleBonus = Math.round(rep * 400000 * (0.8 + Math.random() * 0.4) * multiplier);
           desc = "Perfil Conservador: Foco em receita garantida toda semana, com bônus modestos por vitórias e títulos.";
         } else if (i === 1) {
-          weeklyFee = Math.round(rep * 90000 * (0.95 + Math.random() * 0.1));
-          winBonus = Math.round(rep * 45000 * (0.9 + Math.random() * 0.2));
-          titleBonus = Math.round(rep * 800000 * (0.8 + Math.random() * 0.4));
+          weeklyFee = Math.round(rep * 90000 * (0.95 + Math.random() * 0.1) * multiplier);
+          winBonus = Math.round(rep * 45000 * (0.9 + Math.random() * 0.2) * multiplier);
+          titleBonus = Math.round(rep * 800000 * (0.8 + Math.random() * 0.4) * multiplier);
           desc = "Perfil Esportivo: Receita fixa moderada, mas paga excelentes prêmios a cada vitória do time.";
         } else {
-          weeklyFee = Math.round(rep * 75000 * (0.95 + Math.random() * 0.1));
-          winBonus = Math.round(rep * 15000 * (0.9 + Math.random() * 0.2));
-          titleBonus = Math.round(rep * 2500000 * (0.9 + Math.random() * 0.2));
+          weeklyFee = Math.round(rep * 75000 * (0.95 + Math.random() * 0.1) * multiplier);
+          winBonus = Math.round(rep * 15000 * (0.9 + Math.random() * 0.2) * multiplier);
+          titleBonus = Math.round(rep * 2500000 * (0.9 + Math.random() * 0.2) * multiplier);
           desc = "Perfil Ousado: Contrato de longo prazo com valores semanais menores, porém com premiação gigante em caso de título.";
         }
       } else if (type === "sleeve") {
         weeksRemaining = [30, 35, 45][i];
         if (i === 0) {
-          weeklyFee = Math.round(rep * 55000 * (0.9 + Math.random() * 0.2));
-          winBonus = Math.round(rep * 2000);
+          weeklyFee = Math.round(rep * 55000 * (0.9 + Math.random() * 0.2) * multiplier);
+          winBonus = Math.round(rep * 2000 * multiplier);
           desc = "Sleeve fixo de curto prazo.";
         } else if (i === 1) {
-          weeklyFee = Math.round(rep * 40000 * (0.9 + Math.random() * 0.2));
-          winBonus = Math.round(rep * 8000 * (0.9 + Math.random() * 0.2));
+          weeklyFee = Math.round(rep * 40000 * (0.9 + Math.random() * 0.2) * multiplier);
+          winBonus = Math.round(rep * 8000 * (0.9 + Math.random() * 0.2) * multiplier);
           desc = "Sleeve esportivo com bônus de vitória expressivo.";
         } else {
-          weeklyFee = Math.round(rep * 45000 * (0.9 + Math.random() * 0.2));
-          winBonus = Math.round(rep * 4000);
-          titleBonus = Math.round(rep * 250000);
+          weeklyFee = Math.round(rep * 45000 * (0.9 + Math.random() * 0.2) * multiplier);
+          winBonus = Math.round(rep * 4000 * multiplier);
+          titleBonus = Math.round(rep * 250000 * multiplier);
           desc = "Sleeve equilibrado de duração intermediária.";
         }
       } else {
         weeksRemaining = [80, 90, 120][i];
         if (i === 0) {
-          weeklyFee = Math.round(rep * 75000 * (0.9 + Math.random() * 0.2));
-          titleBonus = Math.round(rep * 300000);
+          weeklyFee = Math.round(rep * 75000 * (0.9 + Math.random() * 0.2) * multiplier);
+          titleBonus = Math.round(rep * 300000 * multiplier);
           desc = "Naming Rights com excelente repasse semanal.";
         } else if (i === 1) {
-          weeklyFee = Math.round(rep * 55000 * (0.9 + Math.random() * 0.2));
-          titleBonus = Math.round(rep * 900000 * (0.9 + Math.random() * 0.2));
+          weeklyFee = Math.round(rep * 55000 * (0.9 + Math.random() * 0.2) * multiplier);
+          titleBonus = Math.round(rep * 900000 * (0.9 + Math.random() * 0.2) * multiplier);
           desc = "Naming Rights com alto bônus por conquistas.";
         } else {
-          weeklyFee = Math.round(rep * 62000 * (0.9 + Math.random() * 0.2));
-          titleBonus = Math.round(rep * 500000);
+          weeklyFee = Math.round(rep * 62000 * (0.9 + Math.random() * 0.2) * multiplier);
+          titleBonus = Math.round(rep * 500000 * multiplier);
           desc = "Naming Rights de longa duração equilibrado.";
         }
       }
@@ -3875,7 +3883,9 @@ class GameEngine {
         winBonus: Math.round(winBonus / 1000) * 1000,
         titleBonus: Math.round(titleBonus / 1000) * 1000,
         weeksRemaining: weeksRemaining,
-        desc: desc
+        desc: desc,
+        multiplier: multiplier,
+        confidence: confidence
       });
     }
     
