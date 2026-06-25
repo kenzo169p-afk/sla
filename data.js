@@ -617,11 +617,14 @@ function generateWorldDatabase() {
         const starSquad = STAR_PLAYERS[teamName] || [];
         const squad = [];
 
-        // Generate squad based on team reputation
+        // Generate squad based on team reputation and division
         // High reputation teams get high rated players (average rating 80-92)
         // Low reputation teams get lower rated players (average rating 60-75)
         const rep = teamData.reputation;
-        const avgRating = Math.round(55 + (rep * 7.5) + (Math.random() * 5));
+        const isSecondDiv = league.id.endsWith("_b");
+        const avgRating = isSecondDiv 
+          ? Math.round(38 + (rep * 4.5) + (Math.random() * 4))
+          : Math.round(55 + (rep * 7.5) + (Math.random() * 5));
 
         // Distribution of positions: 2 GOL, 5 ZAG, 3 LAT, 6 MEI, 4 ATA = 20 players
         const positionCount = {
@@ -634,19 +637,23 @@ function generateWorldDatabase() {
 
         // Add pre-defined star players first
         starSquad.forEach(star => {
-          const value = calculatePlayerValue(star.rating, star.age, star.pos);
-          const salary = calculatePlayerSalary(star.rating, star.age, value);
-          let potential = star.rating;
+          let rating = star.rating;
+          if (isSecondDiv) {
+            rating = Math.max(50, Math.round(star.rating * 0.8)); // scale down star players of second division teams
+          }
+          const value = calculatePlayerValue(rating, star.age, star.pos);
+          const salary = calculatePlayerSalary(rating, star.age, value);
+          let potential = rating;
           if (star.age <= 25) {
-            potential = Math.min(99, star.rating + Math.floor(Math.random() * 12) + 4);
+            potential = Math.min(99, rating + Math.floor(Math.random() * 12) + 4);
           } else if (star.age <= 30) {
-            potential = Math.min(99, star.rating + Math.floor(Math.random() * 4) + 1);
+            potential = Math.min(99, rating + Math.floor(Math.random() * 4) + 1);
           }
           squad.push({
             id: generateId(),
             name: star.name,
             position: star.pos,
-            rating: star.rating,
+            rating: rating,
             potential: potential,
             age: star.age,
             nationality: star.nat,
@@ -723,9 +730,17 @@ function generateWorldDatabase() {
         });
 
         // Standard team parameters
-        const budget = Math.round((teamData.reputation ** 3.5) * 5000000); // 10M to 250M
-        const ticketPrice = Math.round(15 + (teamData.reputation * 10)); // 15 to 65
-        const stadiumCap = Math.round((teamData.reputation ** 2) * 5000 + 10000); // 15k to 135k
+        let budget = Math.round((teamData.reputation ** 3.5) * 5000000); // 10M to 250M
+        let ticketPrice = Math.round(15 + (teamData.reputation * 10)); // 15 to 65
+        let stadiumCap = Math.round((teamData.reputation ** 2) * 5000 + 10000); // 15k to 135k
+        let sponsorIncome = Math.round(teamData.reputation * 150000); // weekly sponsor income
+
+        if (isSecondDiv) {
+          budget = Math.round((teamData.reputation ** 2.5) * 500000); // R$ 5M to R$ 14.3M (lower starting money)
+          stadiumCap = Math.round((teamData.reputation ** 1.8) * 1500 + 5000); // 10k to 25k
+          ticketPrice = Math.round(10 + (teamData.reputation * 5)); // 15 to 30
+          sponsorIncome = Math.round(teamData.reputation * 30000); // weekly sponsor income
+        }
 
         return {
           id: generateId(),
@@ -740,7 +755,7 @@ function generateWorldDatabase() {
           ticketPrice: ticketPrice,
           fansLoyalty: 60 + Math.floor(teamData.reputation * 8),
           loan: 0,
-          sponsorIncome: Math.round(teamData.reputation * 150000), // weekly sponsor income
+          sponsorIncome: sponsorIncome, // weekly sponsor income
           points: 0,
           played: 0,
           wins: 0,

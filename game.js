@@ -3005,8 +3005,11 @@ class GameEngine {
       const runnerUp = league.teams[1];
 
       // Awards
-      this.adjustTeamBudget(champion, 30000000, 'prizeMoney');
-      this.adjustTeamBudget(runnerUp, 18000000, 'prizeMoney');
+      const isSecondDiv = leagueId.endsWith("_b");
+      const prizeChamp = isSecondDiv ? 5000000 : 30000000;
+      const prizeRunner = isSecondDiv ? 3000000 : 18000000;
+      this.adjustTeamBudget(champion, prizeChamp, 'prizeMoney');
+      this.adjustTeamBudget(runnerUp, prizeRunner, 'prizeMoney');
 
       this.addNews("Campeão Nacional", `${champion.name} é o campeão da liga ${league.name}!`);
 
@@ -3148,11 +3151,15 @@ class GameEngine {
         team.squad = activeSquad;
 
         // Fill vacant rosters with youth academy players (base)
+        const isSecondDiv = league.id.endsWith("_b");
         while (team.squad.length < 18) {
           const positions = ["GOL", "ZAG", "LAT", "MEI", "ATA"];
           const pos = positions[Math.floor(Math.random() * positions.length)];
           const leagueRep = league.reputation;
-          const rating = clamp(Math.round(45 + (leagueRep * 6) + (Math.random() * 10)), 45, 75);
+          let rating = clamp(Math.round(45 + (leagueRep * 6) + (Math.random() * 10)), 45, 75);
+          if (isSecondDiv) {
+            rating = clamp(Math.round(38 + (leagueRep * 5) + (Math.random() * 8)), 45, 65);
+          }
           
           const newYouth = {
             id: generateId(),
@@ -3562,7 +3569,11 @@ class GameEngine {
       team.sponsors = {};
     }
     
-    const rep = team.reputation || 3.0;
+    let rep = team.reputation || 3.0;
+    const league = this.findLeagueByTeamId(team.id);
+    if (league && league.id.endsWith("_b")) {
+      rep = rep * 0.35;
+    }
     
     // Set default sponsors if empty (backward compatible)
     if (!team.sponsors.master) {
@@ -3617,7 +3628,11 @@ class GameEngine {
 
   generateSponsorOffers(type) {
     const userTeam = this.findTeamById(this.state.manager.teamId);
-    const rep = userTeam.reputation || 3.0;
+    let rep = userTeam.reputation || 3.0;
+    const isSecondDiv = this.state.manager.leagueId.endsWith("_b");
+    if (isSecondDiv) {
+      rep = rep * 0.35;
+    }
     const offers = [];
     
     for (let i = 0; i < 3; i++) {

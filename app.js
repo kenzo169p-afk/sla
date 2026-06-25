@@ -37,11 +37,15 @@ function updateTeamDropdown() {
 
   const league = window.LEAGUES_DATA.find(l => l.id === leagueId);
   if (league) {
+    const isSecondDiv = league.id.endsWith("_b");
     league.teams.forEach((team, idx) => {
       const opt = document.createElement("option");
       // Use index or team name as ID. Let's match by generating the database first
       opt.value = team.name; // match team name
-      opt.textContent = `${team.name} (Rep: ${"★".repeat(Math.round(team.reputation))} - f: ~${Math.round(55 + team.reputation * 7.5)})`;
+      const estRating = isSecondDiv 
+        ? Math.round(38 + team.reputation * 4.5)
+        : Math.round(55 + team.reputation * 7.5);
+      opt.textContent = `${team.name} (Rep: ${"★".repeat(Math.round(team.reputation))} - f: ~${estRating})`;
       selectTeam.appendChild(opt);
     });
   }
