@@ -1801,7 +1801,7 @@ class GameEngine {
         const finalMatch = roundMatches[0];
         const champion = this.findTeamById(finalMatch.winnerId);
         const prize = 15000000; // 15M prize
-        this.adjustTeamBudget(champion, prize, 'prizeMoney');
+        this.awardTitleRewards(champion, "Copa Nacional", prize);
         this.addNews("Campeão da Copa", `${champion.name} vence a Copa Nacional e leva a taça + R$ 15.000.000 de premiação!`);
         
         if (champion.id === userTeamId) {
@@ -1947,7 +1947,7 @@ class GameEngine {
           if (compKey === "champions") cupName = "Champions League";
           else if (compKey === "sudamericana") cupName = "Copa Sudamericana";
 
-          this.adjustTeamBudget(champion, prize, 'prizeMoney');
+          this.awardTitleRewards(champion, cupName, prize);
           
           this.addNews(`Campeão da ${cupName}`, `${champion.name} conquista o topo e leva a taça da ${cupName} + R$ ${prize.toLocaleString()}!`);
           
@@ -2041,7 +2041,7 @@ class GameEngine {
         const finalMatch = roundMatches[0];
         const champion = this.findTeamById(finalMatch.winnerId);
         const prize = 40000000;
-        this.adjustTeamBudget(champion, prize, 'prizeMoney');
+        this.awardTitleRewards(champion, "Mundial de Clubes da FIFA", prize);
         this.addNews("Campeão Mundial", `${champion.name} vence o Mundial de Clubes da FIFA e é coroado o melhor clube do mundo! + R$ 40.000.000 de premiação.`);
         
         if (champion.id === userTeamId) {
@@ -2367,7 +2367,7 @@ class GameEngine {
           } else {
             // End Cup
             const cupWinner = this.findTeamById(cup.rounds[roundIdx][0].winnerId);
-            this.adjustTeamBudget(cupWinner, 15000000, 'prizeMoney');
+            this.awardTitleRewards(cupWinner, "Copa Nacional", 15000000);
           }
         }
       });
@@ -2454,7 +2454,12 @@ class GameEngine {
               let prize = 25000000;
               if (compKey === "champions") prize = 35000000;
               else if (compKey === "sudamericana") prize = 15000000;
-              this.adjustTeamBudget(champion, prize, 'prizeMoney');
+              
+              let cupName = "Copa Libertadores";
+              if (compKey === "champions") cupName = "Champions League";
+              else if (compKey === "sudamericana") cupName = "Copa Sudamericana";
+              
+              this.awardTitleRewards(champion, cupName, prize);
             }
           }
         }
@@ -2513,7 +2518,7 @@ class GameEngine {
         } else {
           const finalMatch = mundial.rounds[roundIdx][0];
           const champion = this.findTeamById(finalMatch.winnerId);
-          this.adjustTeamBudget(champion, 40000000, 'prizeMoney');
+          this.awardTitleRewards(champion, "Mundial de Clubes da FIFA", 40000000);
           mundial.simulated = true;
         }
       }
@@ -3119,11 +3124,40 @@ class GameEngine {
 
   generateInitialFreeAgents() {
     this.state.freeAgents = [];
-    // Generate 15 unassigned players (free agents)
+
+    // Create Zé Rato: 16 years old, Portuguese, 99 overall, attacker (ATA)
+    const existing = this.findPlayerById("ze_rato");
+    if (!existing) {
+      const value = window.calculatePlayerValue(99, 16, "ATA") * 0.7;
+      const salary = window.calculatePlayerSalary(99, 16, value);
+      const zeRato = {
+        id: "ze_rato",
+        name: "Zé Rato",
+        position: "ATA",
+        rating: 99,
+        potential: 99,
+        age: 16,
+        nationality: "Portuguese",
+        value: value,
+        salary: salary,
+        goals: 0,
+        assists: 0,
+        yellowCards: 0,
+        redCards: 0,
+        games: 0,
+        condition: 100,
+        morale: 95,
+        skills: ["Veloz", "Finalizador", "Driblador"],
+        contract: 0
+      };
+      this.state.freeAgents.push(zeRato);
+    }
+
+    // Generate 19 random unassigned players (free agents)
     const positions = ["GOL", "ZAG", "LAT", "MEI", "ATA"];
     const nationalities = ["Brazilian", "English", "Spanish", "Argentinian", "German", "French", "Italian", "Portuguese"];
     
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 19; i++) {
       const pos = positions[Math.floor(Math.random() * positions.length)];
       const nat = nationalities[Math.floor(Math.random() * nationalities.length)];
       const name = window.generatePlayerName(nat);
@@ -3213,7 +3247,7 @@ class GameEngine {
       const isSecondDiv = leagueId.endsWith("_b");
       const prizeChamp = isSecondDiv ? 5000000 : 30000000;
       const prizeRunner = isSecondDiv ? 3000000 : 18000000;
-      this.adjustTeamBudget(champion, prizeChamp, 'prizeMoney');
+      this.awardTitleRewards(champion, league.name, prizeChamp);
       this.adjustTeamBudget(runnerUp, prizeRunner, 'prizeMoney');
 
       this.addNews("Campeão Nacional", `${champion.name} é o campeão da liga ${league.name}!`);
@@ -3468,7 +3502,9 @@ class GameEngine {
 
     // Notify news
     promoted.forEach(t => {
-      this.addNews("Promoção", `Parabéns! ${t.name} conquistou o acesso e vai disputar a Série A / Divisão Principal!`);
+      const promoVerba = 15000000; // R$ 15M promotion budget boost
+      this.adjustTeamBudget(t, promoVerba, 'prizeMoney');
+      this.addNews("Promoção", `Parabéns! ${t.name} conquistou o acesso e vai disputar a Série A / Divisão Principal! Recebeu R$ 15.000.000 extras de verba inicial para a elite.`);
     });
     relegated.forEach(t => {
       this.addNews("Rebaixamento", `${t.name} fez uma campanha ruim e foi rebaixado para a divisão inferior.`);
@@ -3720,6 +3756,34 @@ class GameEngine {
       this.addNews("Obras no Estádio", `${userTeam.name} iniciou as obras para aumentar a capacidade do estádio em ${capacityIncrease.toLocaleString()} lugares.`);
       this.saveGame();
       window.renderApp();
+    }
+  }
+
+  awardTitleRewards(team, titleName, basePrize) {
+    if (!team) return;
+
+    // 1. Award base tournament prize money
+    if (basePrize > 0) {
+      this.adjustTeamBudget(team, basePrize, 'prizeMoney');
+    }
+
+    // 2. Award sponsor title bonuses (if the team has sponsors)
+    let totalSponsorBonus = 0;
+    if (team.sponsors) {
+      if (team.sponsors.master && team.sponsors.master.titleBonus) {
+        totalSponsorBonus += team.sponsors.master.titleBonus;
+      }
+      if (team.sponsors.stadium && team.sponsors.stadium.titleBonus) {
+        totalSponsorBonus += team.sponsors.stadium.titleBonus;
+      }
+    }
+
+    if (totalSponsorBonus > 0) {
+      this.adjustTeamBudget(team, totalSponsorBonus, 'prizeMoney');
+      // If user's team, notify them of the sponsor payouts!
+      if (this.state.manager && team.id === this.state.manager.teamId) {
+        this.addNews("Patrocínio: Bônus de Título!", `Seus patrocinadores pagaram um bônus total de R$ ${totalSponsorBonus.toLocaleString()} pela conquista do título: ${titleName}!`);
+      }
     }
   }
 
