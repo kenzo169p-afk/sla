@@ -38,7 +38,9 @@ class GameEngine {
         nationality: managerNationality,
         teamId: userTeam.id,
         leagueId: userLeagueId,
-        trophies: []
+        trophies: [],
+        boardConfidence: 80,
+        seasonGoal: null
       },
       year: 2026,
       week: 1,
@@ -86,6 +88,8 @@ class GameEngine {
     this.addNews("Início da Temporada", `O técnico ${managerName} assume o comando do ${userTeam.name}! Boa sorte na sua jornada.`);
     this.generateInitialTransferMarket();
     this.generateInitialFreeAgents();
+
+    this.updateSeasonGoals();
 
     this.saveGame();
   }
@@ -624,6 +628,133 @@ class GameEngine {
     }
   }
 
+  calculateTeamOverallRating(team) {
+    if (!team || !team.squad || team.squad.length === 0) return 50;
+    // Sort squad by rating descending
+    const sorted = [...team.squad].sort((a, b) => b.rating - a.rating);
+    // Take average of top 18 players
+    const top18 = sorted.slice(0, 18);
+    const sum = top18.reduce((acc, p) => acc + p.rating, 0);
+    return Math.round(sum / top18.length);
+  }
+
+  updateSeasonGoals() {
+    const userTeam = this.findTeamById(this.state.manager.teamId);
+    if (!userTeam) return;
+
+    const leagueId = this.state.manager.leagueId;
+    const league = this.state.database[leagueId];
+    if (!league) return;
+
+    // Calculate overalls for all teams in the league
+    const teamOveralls = league.teams.map(t => {
+      return {
+        id: t.id,
+        name: t.name,
+        overall: this.calculateTeamOverallRating(t)
+      };
+    });
+
+    // Sort by overall descending
+    teamOveralls.sort((a, b) => b.overall - a.overall);
+
+    // Find rank of user's team (1-indexed)
+    const userRank = teamOveralls.findIndex(t => t.id === userTeam.id) + 1;
+    const totalTeams = league.teams.length;
+    const userOverall = this.calculateTeamOverallRating(userTeam);
+
+    let targetPosition = 16;
+    let title = "Evitar o Rebaixamento";
+    let description = "A diretoria espera que você evite o rebaixamento da equipe.";
+    let minSafePosition = totalTeams - 4; // e.g. 16 in a 20-team league (since bottom 4 are relegated)
+
+    if (userRank <= 3) {
+      // Title contender
+      targetPosition = 2;
+      title = "Brigar pelo Título";
+      description = "Com um dos melhores elencos, a diretoria exige que você termine no Top 2 (Campeão ou Vice).";
+      minSafePosition = 4; // sacked if finished 5th or lower
+    } else if (userRank <= Math.round(totalTeams * 0.35)) {
+      // Upper tier
+      targetPosition = 6;
+      title = "Classificação Continental (G6)";
+      description = "A diretoria espera uma classificação para as copas continentais (Top 6).";
+      minSafePosition = 10; // sacked if finished 11th or lower
+    } else if (userRank <= Math.round(totalTeams * 0.7)) {
+      // Mid table
+      targetPosition = 12;
+      title = "Meio da Tabela (Top 12)";
+      description = "A diretoria espera uma campanha tranquila e sem sustos no meio da tabela.";
+      minSafePosition = totalTeams - 4; // sacked if relegated
+    } else {
+      // Lower tier
+      targetPosition = totalTeams - 4; // Avoid relegation (top 16 in 20-team league)
+      title = "Evitar o Rebaixamento";
+      description = "A meta principal é manter o clube na divisão. Você precisa terminar fora da zona de rebaixamento.";
+      minSafePosition = totalTeams - 4; // sacked if relegated
+    }
+
+    this.state.manager.seasonGoal = {
+      targetPosition: targetPosition,
+      minSafePosition: minSafePosition,
+      title: title,
+      description: description,
+      teamOverallAtStart: userOverall,
+      overallRankAtStart: userRank
+    };
+    
+    // Reset/initialize confidence
+    this.state.manager.boardConfidence = 80;
+  }
+
+  updateBoardConfidence() {
+    if (!this.state.manager.seasonGoal) return;
+    const userTeam = this.findTeamById(this.state.manager.teamId);
+    if (!userTeam) return;
+
+    const leagueId = this.state.manager.leagueId;
+    const league = this.state.database[leagueId];
+    if (!league) return;
+
+    // Sort teams to find current position
+    const standings = [...league.teams].sort((a, b) => b.points - a.points || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || b.goalsFor - a.goalsFor);
+    const currentPos = standings.findIndex(t => t.id === userTeam.id) + 1;
+    
+    const goal = this.state.manager.seasonGoal;
+    
+    // Form impact
+    let formImpact = 0;
+    if (userTeam.form && userTeam.form.length > 0) {
+      const lastResult = userTeam.form[userTeam.form.length - 1];
+      if (lastResult === "W") formImpact += 4;
+      else if (lastResult === "L") formImpact -= 4;
+      else formImpact -= 1; // draw is slightly disappointing unless meeting goal
+    }
+
+    // Position impact
+    let posImpact = 0;
+    if (currentPos <= goal.targetPosition) {
+      posImpact = 2; // pleased
+    } else if (currentPos <= goal.minSafePosition) {
+      posImpact = -1; // minor concern
+    } else {
+      posImpact = -5; // serious concern
+    }
+
+    let newConfidence = (this.state.manager.boardConfidence || 80) + formImpact + posImpact;
+    
+    // Keep between 0 and 100
+    newConfidence = Math.max(0, Math.min(100, newConfidence));
+    this.state.manager.boardConfidence = newConfidence;
+
+    // Sacking check mid-season if confidence hits 0!
+    if (newConfidence <= 0) {
+      alert(`🚨 DEMISSÃO! A diretoria do ${userTeam.name} perdeu totalmente a confiança no seu trabalho (Confiança: 0%) devido aos maus resultados e à péssima campanha (posição atual: ${currentPos}º, meta: ${goal.title}).\n\nVocê foi demitido! Fim de jogo.`);
+      localStorage.removeItem("brasfoot_save");
+      window.location.reload();
+    }
+  }
+
   // LocalStorage methods
   saveGame() {
     localStorage.setItem("brasfoot_save", JSON.stringify(this.state));
@@ -656,6 +787,11 @@ class GameEngine {
               nt.played = 0;
             }
           });
+        }
+
+        if (this.state.manager && !this.state.manager.seasonGoal) {
+          this.updateSeasonGoals();
+          this.state.manager.boardConfidence = 80;
         }
 
         // Self-healing: financial system upgrades
@@ -2576,6 +2712,10 @@ class GameEngine {
       });
     }
 
+    if (!isSeasonOver) {
+      this.updateBoardConfidence();
+    }
+
     this.saveGame();
     window.renderApp();
   }
@@ -2990,6 +3130,34 @@ class GameEngine {
   resolveSeasonEnd() {
     const summaries = [];
 
+    // 0. Check manager performance against season goals before resolving relegation/promotions
+    const userTeam = this.findTeamById(this.state.manager.teamId);
+    const userLeagueId = this.state.manager.leagueId;
+    const userLeague = this.state.database[userLeagueId];
+    if (userTeam && userLeague && this.state.manager.seasonGoal) {
+      // Sort teams to get final standings
+      const standings = [...userLeague.teams].sort((a, b) => b.points - a.points || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || b.goalsFor - a.goalsFor);
+      const finalPos = standings.findIndex(t => t.id === userTeam.id) + 1;
+      const goal = this.state.manager.seasonGoal;
+      
+      if (finalPos > goal.minSafePosition) {
+        // Sacked!
+        alert(`🚨 DEMITIDO! A diretoria do ${userTeam.name} demitiu você por não cumprir a meta da temporada.\n\nSua meta era terminar no mínimo em ${goal.minSafePosition}º lugar (${goal.title}), mas você terminou em ${finalPos}º lugar.\n\nFim de jogo!`);
+        localStorage.removeItem("brasfoot_save");
+        window.location.reload();
+        return;
+      } else {
+        // Met target or survived! Let's display a success message.
+        let bonusText = "";
+        if (finalPos <= goal.targetPosition) {
+          bonusText = " Você superou as expectativas da diretoria e eles estão radiantes!";
+        } else {
+          bonusText = " Você cumpriu a meta mínima e continua no cargo.";
+        }
+        alert(`🎉 Temporada concluída! A diretoria do ${userTeam.name} está satisfeita com o seu trabalho.${bonusText}`);
+      }
+    }
+
     // 1. Process League Promotions and Relegations
     // We only have Série A and Série B in Brazil, and Premier League and Championship in England.
     // Let's resolve Brazil (br_a & br_b)
@@ -3229,6 +3397,9 @@ class GameEngine {
       window.location.reload();
       return;
     }
+
+    // Generate new season goals based on new squad strength
+    this.updateSeasonGoals();
 
     this.saveGame();
   }

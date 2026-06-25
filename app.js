@@ -273,6 +273,22 @@ function renderDashboard(container) {
   });
   standingsHtml += `</tbody></table>`;
 
+  const goal = game.state.manager.seasonGoal || { title: "Evitar Rebaixamento", description: "A diretoria espera que você evite o rebaixamento da equipe.", minSafePosition: 16, targetPosition: 16 };
+  const confidence = game.state.manager.boardConfidence !== undefined ? game.state.manager.boardConfidence : 80;
+  
+  let confidenceColor = "var(--accent-emerald)";
+  let confidenceColorGlow = "rgba(16, 185, 129, 0.4)";
+  if (confidence < 40) {
+    confidenceColor = "var(--accent-rose)";
+    confidenceColorGlow = "rgba(244, 63, 94, 0.4)";
+  } else if (confidence < 65) {
+    confidenceColor = "var(--accent-gold)";
+    confidenceColorGlow = "rgba(234, 179, 8, 0.4)";
+  }
+
+  // Calculate current team overall
+  const teamOverall = game.calculateTeamOverallRating(clubTeam);
+
   // Build left side widgets
   const leftCol = document.createElement("div");
   leftCol.style.display = "flex";
@@ -285,21 +301,47 @@ function renderDashboard(container) {
     </div>
     
     <div class="grid-2">
-      <div class="glass-card">
-        <h3 class="card-title">Situação Financeira</h3>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div class="finance-metric">
-            <span class="label">Balanço do Caixa</span>
-            <span class="value ${clubTeam.budget >= 0 ? 'positive' : 'negative'}">${formatMoney(clubTeam.budget)}</span>
-          </div>
-          <div class="finance-metric">
-            <span class="label">Empréstimos Bancários</span>
-            <span class="value" style="color: #f59e0b;">${formatMoney(clubTeam.loan)}</span>
+      <div class="glass-card" style="display:flex; flex-direction:column; justify-content:space-between; min-height:180px;">
+        <div>
+          <h3 class="card-title" style="margin-bottom:12px;">Situação Financeira</h3>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="finance-metric">
+              <span class="label">Balanço do Caixa</span>
+              <span class="value ${clubTeam.budget >= 0 ? 'positive' : 'negative'}">${formatMoney(clubTeam.budget)}</span>
+            </div>
+            <div class="finance-metric">
+              <span class="label">Empréstimos Bancários</span>
+              <span class="value" style="color: #f59e0b;">${formatMoney(clubTeam.loan)}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="glass-card">
+      <div class="glass-card" style="display:flex; flex-direction:column; gap:12px; min-height:180px;">
+        <h3 class="card-title" style="margin-bottom:8px;">Metas da Diretoria</h3>
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+          <div>
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600; display:block;">Objetivo</span>
+            <span style="font-weight:700; color:var(--accent-cyan); font-size:14px;">${goal.title}</span>
+            <p style="color:var(--text-muted); font-size:12px; margin-top:2px; line-height:1.3;">${goal.description}</p>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600; display:block;">Força do Elenco</span>
+            <span style="font-weight:600;">Overall Geral: <span style="color:var(--accent-emerald);">${teamOverall}</span> <span style="color:var(--text-muted); font-weight:normal; font-size:12px;">(Rank de Força: ${goal.overallRankAtStart || 'N/A'}º)</span></span>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600;">Confiança</span>
+              <span style="font-weight:800; color:${confidenceColor};">${confidence}%</span>
+            </div>
+            <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; border:1px solid var(--border-glow);">
+              <div style="width:${confidence}%; height:100%; background:${confidenceColor}; box-shadow:0 0 8px ${confidenceColorGlow}; transition: width 0.5s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="grid-column: span 2;">
         <h3 class="card-title">Liga Atual</h3>
         ${standingsHtml}
       </div>
