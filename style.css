@@ -641,6 +641,11 @@ table.premium-table tr:hover td {
   transition: var(--transition-smooth);
 }
 
+select option {
+  background-color: #111827 !important;
+  color: var(--text-main) !important;
+}
+
 .form-control:focus {
   border-color: var(--border-focus);
   background: rgba(255, 255, 255, 0.05);
