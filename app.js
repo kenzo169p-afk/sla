@@ -124,6 +124,16 @@ function switchTab(tabId) {
 function renderApp() {
   if (!game.state) return;
 
+  // Check for pending job offers
+  if (game.state.pendingJobOffers && game.state.pendingJobOffers.length > 0) {
+    const modal = document.getElementById("modal-job-offers");
+    if (modal && modal.style.display !== "flex") {
+      setTimeout(() => {
+        openJobOffersModal();
+      }, 300);
+    }
+  }
+
   // 1. Render Header / Status information
   const userTeam = game.findTeamById(game.state.manager.teamId) || { name: "Sem Time", budget: 0, squad: [] };
   const weekInfo = game.getCurrentWeekMatchInfo() || { title: "Nenhum", match: null };
@@ -318,24 +328,47 @@ function renderDashboard(container) {
       </div>
 
       <div class="glass-card" style="display:flex; flex-direction:column; gap:12px; min-height:180px;">
-        <h3 class="card-title" style="margin-bottom:8px;">Metas da Diretoria</h3>
+        <h3 class="card-title" style="margin-bottom:8px;">Metas & Carreira</h3>
         <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
           <div>
-            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600; display:block;">Objetivo</span>
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600; display:block;">Objetivo da Diretoria</span>
             <span style="font-weight:700; color:var(--accent-cyan); font-size:14px;">${goal.title}</span>
             <p style="color:var(--text-muted); font-size:12px; margin-top:2px; line-height:1.3;">${goal.description}</p>
           </div>
           <div>
             <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600; display:block;">Força do Elenco</span>
-            <span style="font-weight:600;">Overall Geral: <span style="color:var(--accent-emerald);">${teamOverall}</span> <span style="color:var(--text-muted); font-weight:normal; font-size:12px;">(Rank de Força: ${goal.overallRankAtStart || 'N/A'}º)</span></span>
+            <span style="font-weight:600;">Overall Geral: <span style="color:var(--accent-emerald);">${teamOverall}</span> <span style="color:var(--text-muted); font-weight:normal; font-size:12px;">(Rank: ${goal.overallRankAtStart || 'N/A'}º)</span></span>
           </div>
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600;">Confiança</span>
+              <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600;">Confiança do Conselho</span>
               <span style="font-weight:800; color:${confidenceColor};">${confidence}%</span>
             </div>
             <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; border:1px solid var(--border-glow);">
               <div style="width:${confidence}%; height:100%; background:${confidenceColor}; box-shadow:0 0 8px ${confidenceColorGlow}; transition: width 0.5s ease;"></div>
+            </div>
+          </div>
+          <div style="border-top:1px dashed var(--border-glow); padding-top:8px; margin-top:2px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600;">No Clube Atual</span>
+              <span style="font-size:11px; font-weight:700; color:var(--accent-cyan);">Aproveit.: ${(() => {
+                const cStats = game.state.manager.currentClubStats || { wins: 0, draws: 0, losses: 0 };
+                const cTotal = cStats.wins + cStats.draws + cStats.losses;
+                return cTotal > 0 ? (((cStats.wins * 3 + cStats.draws) / (cTotal * 3)) * 100).toFixed(1) + "%" : "0.0%";
+              })()}</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; font-size:11px; background:rgba(255,255,255,0.01); padding:6px; border-radius:6px; border:1px solid var(--border-glow); margin-bottom:6px;">
+              <div><span style="color:var(--accent-emerald); font-weight:700;">${game.state.manager.currentClubStats ? game.state.manager.currentClubStats.wins : 0} Vit</span></div>
+              <div><span style="color:var(--accent-gold); font-weight:700;">${game.state.manager.currentClubStats ? game.state.manager.currentClubStats.draws : 0} Emp</span></div>
+              <div><span style="color:var(--accent-rose); font-weight:700;">${game.state.manager.currentClubStats ? game.state.manager.currentClubStats.losses : 0} Der</span></div>
+            </div>
+          </div>
+          <div style="border-top:1px dashed var(--border-glow); padding-top:6px;">
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:600; display:block; margin-bottom:4px;">Retrospecto da Carreira</span>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; font-size:11px; background:rgba(255,255,255,0.01); padding:6px; border-radius:6px; border:1px solid var(--border-glow);">
+              <div><span style="color:var(--accent-emerald); font-weight:700;">${game.state.manager.stats ? game.state.manager.stats.wins : 0} Vit</span></div>
+              <div><span style="color:var(--accent-gold); font-weight:700;">${game.state.manager.stats ? game.state.manager.stats.draws : 0} Emp</span></div>
+              <div><span style="color:var(--accent-rose); font-weight:700;">${game.state.manager.stats ? game.state.manager.stats.losses : 0} Der</span></div>
             </div>
           </div>
         </div>
@@ -1786,6 +1819,110 @@ function openSponsorNegotiation(type) {
   
   openModal("modal-sponsor-offers");
 }
+
+function openJobOffersModal() {
+  const offers = game.state.pendingJobOffers;
+  if (!offers || offers.length === 0) return;
+
+  const bodyEl = document.getElementById("modal-job-offers-body");
+  
+  let stats = game.state.manager.currentClubStats || { wins: 0, draws: 0, losses: 0 };
+  let totalGames = stats.wins + stats.draws + stats.losses;
+  let titleLabel = "Seu Desempenho no Clube Atual";
+  
+  if (totalGames < 3) {
+    const careerStats = game.state.manager.stats || { wins: 0, draws: 0, losses: 0 };
+    const careerTotal = careerStats.wins + careerStats.draws + careerStats.losses;
+    if (careerTotal >= 3) {
+      stats = careerStats;
+      totalGames = careerTotal;
+      titleLabel = "Seu Desempenho Geral na Carreira";
+    }
+  }
+
+  const winRate = totalGames > 0 ? ((stats.wins / totalGames) * 100).toFixed(1) : "0.0";
+  const pointsRate = totalGames > 0 ? (((stats.wins * 3 + stats.draws) / (totalGames * 3)) * 100).toFixed(1) : "0.0";
+
+  let html = `
+    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glow); border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 13.5px; line-height: 1.5;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-weight:700; color:var(--accent-cyan); font-size:15px;">${titleLabel}</span>
+        <span class="badge" style="background:rgba(245,158,11,0.15); color:var(--accent-gold); font-weight:700;">Aproveitamento: ${pointsRate}%</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; text-align:center; font-size:12px; color:var(--text-muted);">
+        <div>Jogos: <strong style="color:var(--text-main); font-size:14px; display:block;">${totalGames}</strong></div>
+        <div>Vitórias: <strong style="color:var(--accent-emerald); font-size:14px; display:block;">${stats.wins}</strong></div>
+        <div>Empates: <strong style="color:var(--accent-gold); font-size:14px; display:block;">${stats.draws}</strong></div>
+        <div>Derrotas: <strong style="color:var(--accent-rose); font-size:14px; display:block;">${stats.losses}</strong></div>
+      </div>
+    </div>
+    
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Com base nos seus resultados, os seguintes clubes enviaram propostas oficiais de contrato para você:</p>
+    <div style="display:flex; flex-direction:column; gap:16px; max-height: 380px; overflow-y: auto; padding-right: 6px;">
+  `;
+
+  offers.forEach((offer, index) => {
+    // Show reputation stars
+    const stars = "★".repeat(Math.round(offer.rep));
+    
+    html += `
+      <div class="glass-card" style="border: 1px solid var(--border-glow); padding:16px; display:flex; flex-direction:column; gap:12px; transition:var(--transition-smooth);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong style="font-size:16px; color:var(--text-main);">${offer.teamName}</strong>
+            <span style="color:var(--accent-gold); font-size:12px; margin-left:8px;">${stars}</span>
+          </div>
+          <span class="badge" style="background:rgba(59,130,246,0.15); color:var(--accent-blue); font-weight:700;">${offer.leagueName}</span>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:13px; border-top:1px dashed var(--border-glow); padding-top:10px; margin-bottom:4px;">
+          <div>Orçamento do Clube: <strong style="color:var(--accent-emerald);">${formatMoney(offer.budget)}</strong></div>
+          <div>Força Geral (Overall): <strong style="color:var(--accent-cyan);">${offer.overall}</strong></div>
+          <div style="grid-column:span 2;">Expectativa da Diretoria: <strong style="color:var(--accent-gold);">${offer.goalTitle}</strong></div>
+        </div>
+
+        ${offer.message ? `
+        <div style="font-style: italic; color: var(--text-muted); font-size: 12.5px; background: rgba(255,255,255,0.01); padding: 10px 14px; border-radius: 8px; border-left: 3px solid var(--accent-cyan); line-height: 1.4; border-top: 1px solid var(--border-glow); border-right: 1px solid var(--border-glow); border-bottom: 1px solid var(--border-glow);">
+          "${offer.message}"
+        </div>
+        ` : ''}
+        
+        <button class="btn-primary" style="padding:10px; font-size:13px; font-weight:700;" onclick="acceptJobOfferUI('${offer.teamId}', '${offer.leagueId}')">Aceitar Cargo</button>
+      </div>
+    `;
+  });
+
+  html += `
+    </div>
+    <div style="display:flex; justify-content:center; margin-top:20px; border-top:1px solid var(--border-glow); padding-top:16px;">
+      <button class="btn-primary" style="background:rgba(255,255,255,0.05); border-color:var(--border-glow); color:var(--text-main); padding:10px 24px; font-size:13px; font-weight:700;" onclick="refuseJobOffersUI()">Recusar Propostas / Continuar no Clube</button>
+    </div>
+  `;
+
+  bodyEl.innerHTML = html;
+  openModal("modal-job-offers");
+}
+
+function acceptJobOfferUI(teamId, leagueId) {
+  if (confirm("Tem certeza que deseja aceitar este cargo? Você deixará seu time atual imediatamente e assumirá o comando técnico deste novo clube.")) {
+    if (game.acceptJobOffer(teamId, leagueId)) {
+      closeModal("modal-job-offers");
+      window.location.reload();
+    }
+  }
+}
+
+function refuseJobOffersUI() {
+  if (confirm("Deseja recusar todas as propostas e continuar no comando do seu clube atual?")) {
+    game.refuseJobOffers();
+    closeModal("modal-job-offers");
+    renderApp();
+  }
+}
+
+window.openJobOffersModal = openJobOffersModal;
+window.acceptJobOfferUI = acceptJobOfferUI;
+window.refuseJobOffersUI = refuseJobOffersUI;
 
 function selectSponsorOffer(index) {
   const offer = currentSponsorOffers[index];

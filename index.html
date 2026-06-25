@@ -326,6 +326,19 @@
     </div>
   </div>
 
+  <!-- Propostas de Emprego Modal -->
+  <div class="modal-overlay" id="modal-job-offers">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <span id="job-offers-title" style="font-size: 18px; font-weight: 800; color: var(--accent-cyan);">Propostas de Emprego</span>
+        <button onclick="closeModal('modal-job-offers')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="modal-job-offers-body" style="padding: 20px 0 10px 0;">
+        <!-- Dynamically rendered job offers -->
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="data.js"></script>
   <script src="game.js"></script>

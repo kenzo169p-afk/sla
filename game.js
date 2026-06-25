@@ -40,7 +40,9 @@ class GameEngine {
         leagueId: userLeagueId,
         trophies: [],
         boardConfidence: 80,
-        seasonGoal: null
+        seasonGoal: null,
+        stats: { wins: 0, draws: 0, losses: 0 },
+        currentClubStats: { wins: 0, draws: 0, losses: 0 }
       },
       year: 2026,
       week: 1,
@@ -792,6 +794,14 @@ class GameEngine {
         if (this.state.manager && !this.state.manager.seasonGoal) {
           this.updateSeasonGoals();
           this.state.manager.boardConfidence = 80;
+        }
+
+        if (this.state.manager && !this.state.manager.stats) {
+          this.state.manager.stats = { wins: 0, draws: 0, losses: 0 };
+        }
+
+        if (this.state.manager && !this.state.manager.currentClubStats) {
+          this.state.manager.currentClubStats = { wins: 0, draws: 0, losses: 0 };
         }
 
         // Self-healing: financial system upgrades
@@ -1676,7 +1686,8 @@ class GameEngine {
           if (m.scoreHome > m.scoreAway) { isWin = userIsHome; }
           else if (m.scoreHome < m.scoreAway) { isWin = !userIsHome; }
           else { isDraw = true; }
-          
+          this.incrementManagerStats(isWin, isDraw);
+
           this.ensureTeamFinanceLog(userTeam);
           this.initDefaultSponsorsIfMissing(userTeam);
           if (userTeam.sponsors) {
@@ -1755,7 +1766,8 @@ class GameEngine {
           if (m.scoreHome > m.scoreAway) { isWin = userIsHome; }
           else if (m.scoreHome < m.scoreAway) { isWin = !userIsHome; }
           else { isDraw = true; }
-          
+          this.incrementManagerStats(isWin, isDraw);
+
           this.ensureTeamFinanceLog(userTeam);
           this.initDefaultSponsorsIfMissing(userTeam);
           if (userTeam.sponsors) {
@@ -1825,7 +1837,8 @@ class GameEngine {
             if (m.scoreHome > m.scoreAway) { isWin = userIsHome; }
             else if (m.scoreHome < m.scoreAway) { isWin = !userIsHome; }
             else { isDraw = true; }
-            
+            this.incrementManagerStats(isWin, isDraw);
+
             this.ensureTeamFinanceLog(userTeam);
             this.initDefaultSponsorsIfMissing(userTeam);
             if (userTeam.sponsors) {
@@ -1894,7 +1907,8 @@ class GameEngine {
             if (m.scoreHome > m.scoreAway) { isWin = userIsHome; }
             else if (m.scoreHome < m.scoreAway) { isWin = !userIsHome; }
             else { isDraw = true; }
-            
+            this.incrementManagerStats(isWin, isDraw);
+
             this.ensureTeamFinanceLog(userTeam);
             this.initDefaultSponsorsIfMissing(userTeam);
             if (userTeam.sponsors) {
@@ -1990,7 +2004,8 @@ class GameEngine {
           if (m.scoreHome > m.scoreAway) { isWin = userIsHome; }
           else if (m.scoreHome < m.scoreAway) { isWin = !userIsHome; }
           else { isDraw = true; }
-          
+          this.incrementManagerStats(isWin, isDraw);
+
           this.ensureTeamFinanceLog(userTeam);
           this.initDefaultSponsorsIfMissing(userTeam);
           if (userTeam.sponsors) {
@@ -2699,6 +2714,28 @@ class GameEngine {
       if (this.state.week === 46) {
         this.generateMundialFixtures();
       }
+
+      // Random mid-season job offer chance (based on performance, checked every 5 weeks)
+      if (this.state.week % 5 === 0) {
+        const stats = this.state.manager.currentClubStats || { wins: 0, draws: 0, losses: 0 };
+        const totalGames = stats.wins + stats.draws + stats.losses;
+        const pointsRate = totalGames > 0 ? ((stats.wins * 3 + stats.draws) / (totalGames * 3)) * 100 : 50;
+
+        let offerChance = 0.15;
+        if (pointsRate >= 65) {
+          offerChance = 0.35; // Successful coach gets more offers
+        } else if (pointsRate < 35) {
+          offerChance = 0.25; // Struggling teams trying to recruit a savior, or coach looking to jump ship
+        }
+
+        if (Math.random() < offerChance) {
+          const offers = this.generateJobOffers();
+          if (offers && offers.length > 0) {
+            // Just take 1 random offer for mid-season
+            this.state.pendingJobOffers = [offers[Math.floor(Math.random() * offers.length)]];
+          }
+        }
+      }
     }
 
     // Recover condition for everyone slightly
@@ -3401,6 +3438,12 @@ class GameEngine {
     // Generate new season goals based on new squad strength
     this.updateSeasonGoals();
 
+    // Generate job offers for the manager
+    const offers = this.generateJobOffers();
+    if (offers && offers.length > 0) {
+      this.state.pendingJobOffers = offers;
+    }
+
     this.saveGame();
   }
 
@@ -4023,6 +4066,244 @@ class GameEngine {
   getAcademyLevelName(level) {
     const names = ["", "Básica", "Aprimorada", "Excelente", "Classe Mundial"];
     return names[level] || "Aprimorada";
+  }
+
+  incrementManagerStats(isWin, isDraw) {
+    if (!this.state.manager.stats) {
+      this.state.manager.stats = { wins: 0, draws: 0, losses: 0 };
+    }
+    if (isWin) this.state.manager.stats.wins++;
+    else if (isDraw) this.state.manager.stats.draws++;
+    else this.state.manager.stats.losses++;
+
+    if (!this.state.manager.currentClubStats) {
+      this.state.manager.currentClubStats = { wins: 0, draws: 0, losses: 0 };
+    }
+    if (isWin) this.state.manager.currentClubStats.wins++;
+    else if (isDraw) this.state.manager.currentClubStats.draws++;
+    else this.state.manager.currentClubStats.losses++;
+  }
+
+  generateJobOffers() {
+    const userTeam = this.findTeamById(this.state.manager.teamId);
+    if (!userTeam) return [];
+
+    // Get current club stats, falling back to career stats if less than 3 matches played in the current club
+    let stats = this.state.manager.currentClubStats || { wins: 0, draws: 0, losses: 0 };
+    let totalGames = stats.wins + stats.draws + stats.losses;
+    let usingCareerStats = false;
+
+    if (totalGames < 3) {
+      const careerStats = this.state.manager.stats || { wins: 0, draws: 0, losses: 0 };
+      const careerTotal = careerStats.wins + careerStats.draws + careerStats.losses;
+      if (careerTotal >= 3) {
+        stats = careerStats;
+        totalGames = careerTotal;
+        usingCareerStats = true;
+      }
+    }
+
+    const wins = stats.wins;
+    const draws = stats.draws;
+    const losses = stats.losses;
+    const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 50;
+    const pointsRate = totalGames > 0 ? ((wins * 3 + draws) / (totalGames * 3)) * 100 : 50;
+    const lossRate = totalGames > 0 ? (losses / totalGames) * 100 : 25;
+    const drawRate = totalGames > 0 ? (draws / totalGames) * 100 : 25;
+
+    // Collect all clubs from all leagues that are NOT the user's current team
+    const allClubs = [];
+    Object.keys(this.state.database).forEach(leagueId => {
+      const league = this.state.database[leagueId];
+      league.teams.forEach(t => {
+        if (t.id !== userTeam.id) {
+          allClubs.push({
+            team: t,
+            leagueId: leagueId,
+            leagueName: league.name
+          });
+        }
+      });
+    });
+
+    if (allClubs.length === 0) return [];
+
+    // Filter clubs based on performance (wins, draws, losses) and reputation
+    let eligibleClubs = [];
+    const userRep = userTeam.reputation || 3.0;
+
+    allClubs.forEach(c => {
+      const candRep = c.team.reputation || 3.0;
+      const repDiff = candRep - userRep;
+
+      // Check if this candidate club is interested in the manager based on stats
+      let isInterested = false;
+
+      if (totalGames < 3) {
+        // Neutral/New manager: only teams of similar level are interested
+        isInterested = (repDiff >= -0.6 && repDiff <= 0.4);
+      } else {
+        // 1. High Reputation Teams (Elite / Giants) -> candRep >= 4.0 or repDiff >= 0.8
+        if (candRep >= 4.0 || repDiff >= 0.8) {
+          // Require high win percentage & points rate, low defeat percentage
+          if (winRate >= 50 && pointsRate >= 60 && lossRate <= 25) {
+            isInterested = true;
+          }
+        }
+        // 2. Medium-High Teams -> candRep between 3.0 and 3.9 (or repDiff between 0 and 0.8)
+        else if (candRep >= 3.0 && candRep < 4.0) {
+          // Require decent results: pointsRate >= 45% and lossRate <= 35%
+          // OR if defensive/draw specialist: drawRate >= 35% and pointsRate >= 45%
+          if ((pointsRate >= 45 && lossRate <= 35) || (drawRate >= 35 && pointsRate >= 45)) {
+            isInterested = true;
+          }
+        }
+        // 3. Medium-Low Teams -> candRep between 2.0 and 2.9 (or repDiff between -1.0 and 0)
+        else if (candRep >= 2.0 && candRep < 3.0) {
+          // Require at least regular results: pointsRate >= 35% and lossRate <= 45%
+          // If manager is doing worse, maybe only interested if candRep < userRep - 0.5 (stepping down)
+          if (pointsRate >= 35 && lossRate <= 45) {
+            isInterested = true;
+          } else if (pointsRate < 35 && repDiff <= -0.5) {
+            isInterested = true;
+          }
+        }
+        // 4. Low-Tier Teams -> candRep < 2.0 (or repDiff < -1.0)
+        else {
+          // They are willing to take almost anyone, unless the coach is way too good (pointsRate >= 70% and repDiff <= -1.5)
+          // or if the coach is completely failing (pointsRate < 20% and candRep > userRep)
+          if (!(pointsRate >= 70 && repDiff <= -1.5) && !(pointsRate < 20 && candRep > userRep)) {
+            isInterested = true;
+          }
+        }
+      }
+
+      if (isInterested) {
+        eligibleClubs.push(c);
+      }
+    });
+
+    // Pick 3 clubs with a diverse reputation distribution
+    let selected = [];
+    if (eligibleClubs.length > 0) {
+      const stepUp = eligibleClubs.filter(c => (c.team.reputation || 3.0) - userRep > 0.2);
+      const sameTier = eligibleClubs.filter(c => Math.abs((c.team.reputation || 3.0) - userRep) <= 0.2);
+      const stepDown = eligibleClubs.filter(c => (c.team.reputation || 3.0) - userRep < -0.2);
+
+      // Pick 1 from stepUp, 1 from sameTier, 1 from stepDown
+      if (stepUp.length > 0) {
+        selected.push(stepUp[Math.floor(Math.random() * stepUp.length)]);
+      }
+      if (sameTier.length > 0) {
+        selected.push(sameTier[Math.floor(Math.random() * sameTier.length)]);
+      }
+      if (stepDown.length > 0) {
+        selected.push(stepDown[Math.floor(Math.random() * stepDown.length)]);
+      }
+
+      // Fill with other random eligible clubs if we need more
+      const remaining = eligibleClubs.filter(c => !selected.includes(c));
+      const shuffledRemaining = remaining.sort(() => 0.5 - Math.random());
+      while (selected.length < Math.min(3, eligibleClubs.length) && shuffledRemaining.length > 0) {
+        selected.push(shuffledRemaining.pop());
+      }
+    }
+
+    // Fallback if no clubs found
+    if (selected.length === 0) {
+      const fallbackClubs = allClubs.filter(c => Math.abs((c.team.reputation || 3.0) - userRep) <= 1.0);
+      const shuffledFallback = fallbackClubs.sort(() => 0.5 - Math.random());
+      selected = shuffledFallback.slice(0, 3);
+    }
+
+    return selected.map(item => {
+      const t = item.team;
+      const overall = this.calculateTeamOverallRating(t);
+      const isB = item.leagueId.endsWith("_b");
+      const rep = t.reputation || 3.0;
+      
+      // Expected goal based on reputation
+      let goalTitle = "Evitar Rebaixamento";
+      let minSafePos = 16;
+      if (rep >= 4.5 && !isB) {
+        goalTitle = "Brigar pelo Título";
+        minSafePos = 4;
+      } else if (rep >= 3.5 && !isB) {
+        goalTitle = "Classificação Continental (G6)";
+        minSafePos = 10;
+      } else if (rep >= 2.5) {
+        goalTitle = "Meio da Tabela (Top 12)";
+        minSafePos = 16;
+      }
+
+      // Generate a custom board message based on win percentage, draws and losses!
+      let message = "";
+      const currentTeamName = userTeam.name;
+
+      if (totalGames < 3) {
+        message = `A diretoria do ${t.name} confia na sua filosofia de jogo e acredita que você tem o perfil ideal para liderar nosso projeto esportivo.`;
+      } else {
+        const textContext = usingCareerStats ? "na sua carreira" : "no seu clube atual";
+        if (winRate >= 55) {
+          message = `A diretoria do ${t.name} busca um técnico vencedor. Com um ótimo aproveitamento de vitórias de ${winRate.toFixed(0)}% (${wins} vitórias em ${totalGames} jogos) ${textContext} com o ${currentTeamName}, acreditamos que você é o nome certo para guiar nosso elenco ao topo.`;
+        } else if (lossRate <= 18 && totalGames >= 5) {
+          message = `Ficamos impressionados com a solidez da sua equipe ${textContext}. Com apenas ${losses} derrota(s) em ${totalGames} partidas (${lossRate.toFixed(0)}% de derrotas), você mostrou grande consistência defensiva e competitividade. Queremos levar essa estabilidade ao ${t.name}.`;
+        } else if (drawRate >= 35 && pointsRate >= 45) {
+          message = `Analisamos seu trabalho ${textContext} no ${currentTeamName} e destacamos a sua organização tática. Mesmo com ${draws} empates em ${totalGames} jogos, você manteve o time seguro e muito difícil de ser batido. Acreditamos que você dará a solidez necessária ao ${t.name}.`;
+        } else if (pointsRate < 38) {
+          message = `O ${t.name} precisa de uma reformulação completa. Apesar das dificuldades recentes ${textContext} no ${currentTeamName} com ${losses} derrotas e ${draws} empates, enxergamos seu potential tático para reerguer nosso elenco e iniciar um novo ciclo vitorioso.`;
+        } else {
+          message = `Analisamos detalhadamente seus números ${textContext} (${wins} vitórias, ${draws} empates, ${losses} derrotas - aproveitamento de ${pointsRate.toFixed(0)}%). Vemos em você o perfil técnico perfeito para guiar nosso elenco rumo aos objetivos traçados.`;
+        }
+      }
+
+      return {
+        teamId: t.id,
+        teamName: t.name,
+        leagueId: item.leagueId,
+        leagueName: item.leagueName,
+        budget: t.budget,
+        overall: overall,
+        goalTitle: goalTitle,
+        minSafePos: minSafePos,
+        rep: rep,
+        message: message
+      };
+    });
+  }
+
+  acceptJobOffer(teamId, leagueId) {
+    const userTeam = this.findTeamById(this.state.manager.teamId);
+    const newTeam = this.findTeamById(teamId);
+    if (!newTeam) return false;
+
+    // Remove pending offers
+    delete this.state.pendingJobOffers;
+
+    // Reset manager parameters for the new team
+    this.state.manager.teamId = newTeam.id;
+    this.state.manager.leagueId = leagueId;
+    this.state.manager.currentClubStats = { wins: 0, draws: 0, losses: 0 };
+    
+    // Auto escalate new squad so they are ready to play
+    this.autoSelectComputerLineup(newTeam);
+
+    // Generate new season goal
+    this.updateSeasonGoals();
+
+    // Reset confidence
+    this.state.manager.boardConfidence = 80;
+
+    // Add news
+    this.addNews("Novo Treinador", `O técnico ${this.state.manager.name} aceitou a proposta do ${newTeam.name} e assumiu o comando do clube!`);
+    
+    this.saveGame();
+    return true;
+  }
+
+  refuseJobOffers() {
+    delete this.state.pendingJobOffers;
+    this.saveGame();
   }
 
   calculateTeamAssetValue(team) {
