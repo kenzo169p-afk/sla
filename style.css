@@ -278,6 +278,18 @@ body {
   margin-bottom: 24px;
 }
 
+.grid-tactics-layout {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+}
+
+.grid-tables-layout {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 24px;
+}
+
 /* Tables styling */
 table.premium-table {
   width: 100%;
@@ -1136,33 +1148,278 @@ table.premium-table tr:hover td {
   border-color: var(--accent-cyan);
   color: white;
 }
-/* Hide mobile menu button on larger screens */
-#mobile-menu-btn { display: none; }
-/* Responsive design for mobile */
-@media (max-width: 768px) {
-  /* Sidebar overlay */
-  #sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    height: 100vh;
-    width: 260px;
-    background: var(--bg-secondary);
-    transition: left var(--transition-smooth);
-    z-index: 2500;
-  }
-  #sidebar.active { left: 0; }
-  /* Show mobile menu button */
-  #mobile-menu-btn { display: inline-flex; }
-  /* Adjust layout */
-  #app-container { flex-direction: column; }
-  #main-content { width: 100%; }
-  #header-bar { justify-content: space-between; }
-  /* Grid adjustments */
-  .grid-main-dashboard, .grid-2, .grid-3 {
-    grid-template-columns: 1fr !important;
-  }
-  .glass-card { margin-bottom: 16px; }
+.stadium-sub-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
 }
-/* Hide mobile menu button on larger screens */
-#mobile-menu-btn { display: none; }
+/* Sidebar close button hidden by default */
+.sidebar-close-btn {
+  display: none;
+}
+
+/* Hide mobile menu button on larger screens by default */
+#mobile-menu-btn {
+  display: none;
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+  /* Welcome setup screen */
+  .welcome-box {
+    padding: 24px 16px !important;
+    margin: 16px !important;
+    max-width: 95% !important;
+  }
+  .welcome-box h1 {
+    font-size: 26px !important;
+  }
+
+  /* Sidebar overlay drawer */
+  #sidebar {
+    position: fixed !important;
+    left: -280px !important;
+    top: 0 !important;
+    height: 100vh !important;
+    width: 280px !important;
+    background: #0f172a !important; /* solid/opaque dark background for mobile readability */
+    backdrop-filter: blur(20px) !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 4000 !important;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6) !important;
+  }
+  #sidebar.active {
+    left: 0 !important;
+  }
+
+  /* Sidebar close button */
+  .sidebar-close-btn {
+    display: block !important;
+    position: absolute !important;
+    right: 16px !important;
+    top: 16px !important;
+    font-size: 28px !important;
+    background: none !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+  }
+
+  /* Show mobile menu hamburger button */
+  #mobile-menu-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-glow) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  #mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* Main Workspace App container */
+  #app-container {
+    flex-direction: column !important;
+  }
+  #main-content {
+    width: 100% !important;
+    height: 100vh !important;
+  }
+
+  /* Header adjustments */
+  #header-bar {
+    height: 60px !important;
+    padding: 0 12px !important;
+    justify-content: space-between !important;
+  }
+  .header-time-info {
+    gap: 8px !important;
+  }
+  .time-badge {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+  .header-action-btn {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Screen container padding */
+  .screen-container {
+    padding: 12px !important;
+    height: calc(100vh - 60px) !important;
+  }
+
+  /* Layout Grids to column blocks */
+  .grid-main-dashboard,
+  .grid-tactics-layout,
+  .grid-tables-layout,
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* Stadium and sub-navigation */
+  .stadium-sub-nav {
+    flex-direction: column !important;
+  }
+
+  /* Tab toggle buttons */
+  .form-toggle-switch {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  /* Search filter dropdowns */
+  .search-filter-bar {
+    gap: 8px !important;
+  }
+  .search-filter-bar select, .search-filter-bar input {
+    flex-grow: 1 !important;
+    width: 100% !important;
+  }
+
+  /* Card and dashboard widgets adjustments */
+  .glass-card {
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  .card-title {
+    font-size: 15px !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* Responsive scrollable tables */
+  table.premium-table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  table.premium-table th, table.premium-table td {
+    padding: 10px 8px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Pitch & tactics scaling */
+  .pitch-container {
+    height: 420px !important;
+    max-width: 100% !important;
+  }
+  .field-player-shirt {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 10px !important;
+    border-width: 2px !important;
+  }
+  .field-player-shirt .pos-overlay {
+    font-size: 7px !important;
+    padding: 0px 2px !important;
+    bottom: -3px !important;
+    right: -3px !important;
+  }
+  .field-player-node {
+    width: 55px !important;
+  }
+  .field-player-name {
+    font-size: 9px !important;
+    padding: 1px 3px !important;
+  }
+  .field-player-rating {
+    font-size: 8px !important;
+  }
+
+  /* Match Simulator Screen */
+  #match-screen .match-header {
+    height: 80px !important;
+    padding: 0 12px !important;
+  }
+  .match-header-team-name {
+    font-size: 13px !important;
+  }
+  .match-live-score {
+    font-size: 26px !important;
+    letter-spacing: 2px !important;
+  }
+  .match-live-timer {
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+  }
+  .team-shield-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .match-header-team {
+    gap: 8px !important;
+    width: 40% !important;
+  }
+
+  .match-live-body {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1.3fr 1fr !important;
+    height: calc(100vh - 190px) !important;
+  }
+  .match-commentary-panel {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-glow) !important;
+    padding: 12px !important;
+  }
+  .match-sidebar-scores {
+    padding: 12px !important;
+  }
+
+  #match-screen .match-footer-controls {
+    height: auto !important;
+    padding: 10px 12px !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .match-sim-layout-controls {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .sim-speed-btn, .match-quick-tactic-btn {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* Modal responsiveness */
+  .modal-content {
+    padding: 16px !important;
+    width: 95% !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
+  .modal-header {
+    font-size: 16px !important;
+    margin-bottom: 16px !important;
+  }
+  .form-group {
+    margin-bottom: 12px !important;
+  }
+  .form-group label {
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+  }
+  .form-control {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+  }
+}

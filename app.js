@@ -99,6 +99,12 @@ function getActiveUserTeam() {
 function switchTab(tabId) {
   game.activeTab = tabId;
   
+  // Close mobile sidebar if open
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.classList.remove("active");
+  }
+  
   // Update sidebar active state
   document.querySelectorAll("#sidebar .nav-item").forEach(item => {
     item.classList.remove("active");
@@ -429,9 +435,7 @@ function renderTactics(container) {
   const userTeam = getActiveUserTeam();
 
   const wrapper = document.createElement("div");
-  wrapper.style.display = "grid";
-  wrapper.style.gridTemplateColumns = "1.5fr 1fr";
-  wrapper.style.gap = "24px";
+  wrapper.className = "grid-tactics-layout";
 
   // Left column: Visual field
   const fieldCard = document.createElement("div");
@@ -822,9 +826,7 @@ function renderLeagueStandings(leagueId, card) {
     scorersHtml = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:13px;">Nenhum gol marcado nesta liga ainda.</div>`;
   }
 
-  card.style.display = "grid";
-  card.style.gridTemplateColumns = "2.5fr 1fr";
-  card.style.gap = "24px";
+  card.className = "grid-tables-layout";
 
   card.innerHTML = `
     <div>
@@ -1871,9 +1873,7 @@ function renderStadium(container) {
 
   // Sub navigation tabs
   const subNav = document.createElement("div");
-  subNav.style.display = "flex";
-  subNav.style.gap = "8px";
-  subNav.style.marginBottom = "20px";
+  subNav.className = "stadium-sub-nav";
   subNav.innerHTML = `
     <button class="tab-btn ${activeStadiumTab === 'stadium' ? 'active' : ''}" style="flex:1; padding:10px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid var(--border-glow); background:${activeStadiumTab === 'stadium' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)'}; color:${activeStadiumTab === 'stadium' ? 'var(--accent-emerald)' : 'var(--text-main)'}; cursor:pointer;" onclick="window.changeStadiumTab('stadium')">🏟️ Infraestrutura</button>
     <button class="tab-btn ${activeStadiumTab === 'finance' ? 'active' : ''}" style="flex:1; padding:10px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid var(--border-glow); background:${activeStadiumTab === 'finance' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)'}; color:${activeStadiumTab === 'finance' ? 'var(--accent-blue)' : 'var(--text-main)'}; cursor:pointer;" onclick="window.changeStadiumTab('finance')">📊 Finanças & Banco</button>

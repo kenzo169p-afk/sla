@@ -63,6 +63,7 @@
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
         </svg>
         <h1>BRASFOOT</h1>
+        <button id="sidebar-close-btn" class="sidebar-close-btn" onclick="toggleMobileMenu()">&times;</button>
       </div>
 
       <div class="nav-links">
@@ -209,23 +210,6 @@
       <div class="modal-header">
         <span id="detail-player-name">Ficha Técnica</span>
         <button onclick="closeModal('modal-player-detail')" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
-      </div>
-      <!-- Header bar with weekly actions -->
-      <div id="header-bar">
-        <button id="mobile-menu-btn" class="header-action-btn" onclick="toggleMobileMenu()" style="display:none;">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-        </button>
-        <div class="header-time-info">
-          <div class="time-badge" id="header-week-badge">
-            Temporada <span>1</span> | Semana <span>1</span>
-          </div>
-        </div>
-        <button class="header-action-btn" onclick="handlePlayNextMatch()">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          Jogar Próxima Partida
-        </button>
       </div>
       <!-- Scrollable content screens -->
       <div id="modal-player-detail-content">
