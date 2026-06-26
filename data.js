@@ -589,6 +589,58 @@ const NATIONAL_NAMES = {
   "American": {
     first: ["Christian", "Brandon", "Tyler", "Weston", "Walker", "Miles", "DeAndre", "Matt", "Sean", "Drake", "Chris", "Tim", "Mark", "Cameron", "Caleb", "Aidan", "Josh", "Jack", "Ben", "Luca", "Gianluca", "Duncan", "Cole", "Alex", "Patrick", "Gaga", "Ethan", "Sergino", "Antonee", "Joe", "Malik", "Johnny", "Ricardo", "Folarin", "Timothy"],
     last: ["Smith", "Robinson", "Carter", "Adams", "Morris", "Turner", "Steffen", "Sargent", "Weah", "Balogun", "Pepi", "Cardoso", "Tillman", "Scally", "Jedwin", "Ream", "Richards", "McKenzie", "Trusty", "Wiley", "Musah", "Reyna", "De la Torre", "Aaronson", "Pulisic", "Cowell", "Zendejas", "Celentano", "Callender"]
+  },
+  "Moroccan": {
+    first: ["Achraf", "Youssef", "Hakim", "Sofyan", "Nayef", "Amine", "Abderrazak", "Tarid", "Selim", "Munir", "Walid", "Bilal", "Azzedine", "Ayoub", "Noussair", "Oussama", "Anass", "Zakaria", "Ismael", "Yahya"],
+    last: ["Saïss", "En-Nesyri", "Ziyech", "Amrabat", "Aguerd", "Harit", "Hamdallah", "Tissoudali", "Amallah", "El Haddadi", "Cheddira", "Sabiri", "Ounahi", "El Kaabi", "Mazraoui", "Idrissi", "Zaroury", "Aboukhlal", "Bennacer", "Attiyat Allah"]
+  },
+  "Dutch": {
+    first: ["Virgil", "Frenkie", "Memphis", "Cody", "Nathan", "Denzel", "Matthijs", "Stefan", "Teun", "Xavi", "Tijjani", "Jeremie", "Georginio", "Daley", "Steven", "Donny", "Luuk", "Ryan", "Justin", "Wout"],
+    last: ["van Dijk", "de Jong", "Depay", "Gakpo", "Aké", "Dumfries", "de Ligt", "de Vrij", "Koopmeiners", "Simons", "Reijnders", "Frimpong", "Wijnaldum", "Blind", "Bergwijn", "van de Beek", "de Jong", "Gravenberch", "Kluivert", "Weghorst"]
+  },
+  "Belgian": {
+    first: ["Kevin", "Romelu", "Thibaut", "Yannick", "Youri", "Leandro", "Lois", "Jérémy", "Timothy", "Wout", "Charles", "Arthur", "Amadou", "Orel", "Zeno", "Koen", "Thomas", "Dodi", "Alexis", "Michy"],
+    last: ["De Bruyne", "Lukaku", "Courtois", "Carrasco", "Tielemans", "Trossard", "Openda", "Doku", "Castagne", "Faes", "De Ketelaere", "Vermeeren", "Onana", "Mangala", "Debast", "Casteels", "Meunier", "Lukebakio", "Saelemaekers", "Batshuayi"]
+  },
+  "Croatian": {
+    first: ["Luka", "Mateo", "Ivan", "Marcelo", "Joško", "Andrej", "Mario", "Lovro", "Borna", "Josip", "Dominik", "Martin", "Nikola", "Kristijan", "Domagoj", "Bruno", "Ante", "Petar", "Marco", "Dion"],
+    last: ["Modrić", "Kovačić", "Perišić", "Brozović", "Gvardiol", "Kramarić", "Pašalić", "Majer", "Barišić", "Šutalo", "Livaković", "Baturina", "Vlašić", "Jakić", "Vida", "Petković", "Budimir", "Musa", "Pasalic", "Drena Beljo"]
+  },
+  "Colombian": {
+    first: ["James", "Luis", "Davinson", "Jefferson", "Mateus", "Jhon", "Daniel", "Santiago", "Rafael", "Yerry", "Wilmar", "Juan", "David", "Camilo", "Richard", "Jorge", "Kevin", "Alvaro", "Jader", "Johan"],
+    last: ["Rodríguez", "Díaz", "Sánchez", "Lerma", "Uribe", "Arias", "Muñoz", "Borré", "Mina", "Barrios", "Cuadrado", "Ospina", "Vargas", "Ríos", "Carrascal", "Castaño", "Mojica", "Durán", "Lucumí", "Asprilla"]
+  },
+  "Uruguayan": {
+    first: ["Federico", "Darwin", "Luis", "Giorgian", "Ronald", "Manuel", "José", "Rodrigo", "Facundo", "Mathías", "Sergio", "Nahitan", "Edinson", "Lucas", "Miguel", "Maximiliano", "Brian", "Nicolás", "Santiago", "Sebastian"],
+    last: ["Valverde", "Núñez", "Suárez", "de Arrascaeta", "Araújo", "Ugarte", "Giménez", "Bentancur", "Pellistri", "Olivera", "Rochet", "Nández", "Cavani", "Torreira", "Merentiel", "Gómez", "Rodríguez", "de la Cruz", "Bueno", "Coates"]
+  },
+  "Japanese": {
+    first: ["Shuto", "Hiroki", "Daiki", "Yuto", "Koki", "Takumi", "Kenta", "Ryotaro", "Shoya", "Keisuke", "Kyogo", "Kaoru", "Wataru", "Ao", "Takefusa", "Ritsu", "Ko", "Yukinari", "Daichi", "Reo"],
+    last: ["Tanaka", "Sato", "Suzuki", "Takahashi", "Watanabe", "Ito", "Nakamura", "Kobayashi", "Yamamoto", "Asano", "Mitoma", "Endo", "Kubo", "Doan", "Itakura", "Sugawara", "Kamada", "Hatate", "Maeda", "Furuhashi"]
+  },
+  "Korean": {
+    first: ["Min-jae", "Heung-min", "Kang-in", "Hee-chan", "Gue-sung", "Jae-sung", "Woo-yeong", "In-beom", "Hyun-woo", "Young-woo", "Seol", "Ji-sung"],
+    last: ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Hwang", "Son", "Hong", "Seo", "Han"]
+  },
+  "Iranian": {
+    first: ["Mehdi", "Sardar", "Alireza", "Saman", "Ehsan", "Milad", "Hossein", "Shoja", "Ramin", "Saeid", "Ali", "Karim", "Amir", "Payam", "Majid"],
+    last: ["Taremi", "Azmoun", "Jahanbakhsh", "Ghoddos", "Hajsafi", "Mohammadi", "Kanaani", "Khalilzadeh", "Rezaeian", "Ezatolahi", "Karimi", "Ansarifard", "Niazmand", "Beiranvand", "Hosseini"]
+  },
+  "Danish": {
+    first: ["Christian", "Rasmus", "Pierre-Emile", "Andreas", "Joachim", "Jonas", "Kasper", "Mikkel", "Victor", "Alexander", "Morten", "Philip", "Yussuf", "Gustav"],
+    last: ["Eriksen", "Højlund", "Højbjerg", "Christensen", "Andersen", "Wind", "Schmeichel", "Damsgaard", "Kristiansen", "Bah", "Hjulmand", "Billing", "Poulsen", "Isaksen"]
+  },
+  "Swedish": {
+    first: ["Alexander", "Dejan", "Viktor", "Emil", "Robin", "Victor", "Ludwig", "Jens", "Carl", "Samuel", "Gustaf", "Anthony", "Hugo", "Isak", "Kristoffer"],
+    last: ["Isak", "Kulusevski", "Gyökeres", "Forsberg", "Olsen", "Lindelöf", "Augustinsson", "Cajuste", "Starfelt", "Gustafson", "Lagerbielke", "Elanga", "Larsson", "Hien", "Olsson"]
+  },
+  "Ukrainian": {
+    first: ["Artem", "Mykhailo", "Oleksandr", "Viktor", "Vitaliy", "Illya", "Taras", "Ruslan", "Roman", "Heorhiy", "Anatoliy", "Valeriy", "Serhiy", "Andriy"],
+    last: ["Dovbyk", "Mudryk", "Zinchenko", "Tsygankov", "Mykolenko", "Zabarnyi", "Stepanenko", "Malinovskyi", "Yaremchuk", "Sudakov", "Trubin", "Bondar", "Sydorchuk", "Lunin"]
+  },
+  "Polish": {
+    first: ["Robert", "Piotr", "Sebastian", "Nicola", "Przemysław", "Jakub", "Jan", "Wojciech", "Marcin", "Kamil", "Karol", "Bartosz", "Mateusz", "Paweł"],
+    last: ["Lewandowski", "Zieliński", "Szymański", "Zalewski", "Frankowski", "Kiwior", "Bednarek", "Szczęsny", "Bułka", "Grosicki", "Świderski", "Berestzyński", "Slisz", "Piotrowski"]
   }
 };
 
@@ -782,7 +834,100 @@ function clamp(val, min, max) {
 }
 
 function generatePlayerName(nat) {
-  const bank = NATIONAL_NAMES[nat] || NATIONAL_NAMES["Brazilian"];
+  let targetNat = nat;
+  const mappings = {
+    // English/British/Common/African Anglophone
+    "Welsh": "English",
+    "Australian": "English",
+    "Canadian": "English",
+    "Jamaican": "English",
+    "Scottish": "English",
+    "Irish": "English",
+    "NorthernIrish": "English",
+    "SouthAfrican": "English",
+    "Ghanaian": "English",
+    "Zambian": "English",
+    "Kiwi": "English",
+    "Ugandan": "English",
+
+    // French/Francophone African/Swiss
+    "Swiss": "French",
+    "Senegalese": "French",
+    "Tunisian": "French",
+    "Algerian": "French",
+    "Cameroonian": "French",
+    "Ivorian": "French",
+    "Malian": "French",
+    "Congolese": "French",
+    "Guinean": "French",
+    "Gabonese": "French",
+
+    // German/Austrian/European
+    "Austrian": "German",
+    "Turkish": "German",
+    "Greek": "German",
+    "Norwegian": "German",
+    "Romanian": "German",
+    "Slovak": "German",
+    "Slovenian": "German",
+    "Czech": "German",
+    "Hungarian": "German",
+    "Serbian": "German",
+    "Finnish": "German",
+    "Icelandic": "German",
+    "Albanian": "German",
+    "Macedonian": "German",
+    "Georgian": "German",
+    "Bosnian": "German",
+    "Bulgarian": "German",
+    "Montenegrin": "German",
+    "Luxembourger": "German",
+    "Armenian": "German",
+    "Kazakh": "German",
+    "Azerbaijani": "German",
+
+    // Spanish/Latin American
+    "Ecuadorian": "Spanish",
+    "Chilean": "Spanish",
+    "Mexican": "Spanish",
+    "Paraguayan": "Spanish",
+    "Peruvian": "Spanish",
+    "Venezuelan": "Spanish",
+    "Bolivian": "Spanish",
+    "CostaRican": "Spanish",
+    "Panamanian": "Spanish",
+    "Honduran": "Spanish",
+    "Salvadoran": "Spanish",
+
+    // Portuguese/Lusophone
+    "CapeVerdean": "Portuguese",
+    "Angolan": "Portuguese",
+
+    // Arabic
+    "Egyptian": "Saudi",
+    "Qatari": "Saudi",
+    "Iraqi": "Saudi",
+    "UAE": "Saudi",
+    "Omani": "Saudi",
+    "Jordanian": "Saudi",
+    "Bahraini": "Saudi",
+    "Syrian": "Saudi",
+    "Palestinian": "Saudi",
+
+    // Central Asian
+    "Uzbek": "Iranian",
+    "Kyrgyz": "Iranian",
+
+    // East Asian
+    "Chinese": "Japanese",
+    "Vietnamese": "Japanese",
+    "Thai": "Japanese",
+    "NorthKorean": "Korean"
+  };
+  if (mappings[nat]) {
+    targetNat = mappings[nat];
+  }
+  const bank = NATIONAL_NAMES[targetNat] || NATIONAL_NAMES["Brazilian"];
   const f = bank.first[Math.floor(Math.random() * bank.first.length)];
   const l = bank.last[Math.floor(Math.random() * bank.last.length)];
   return `${f} ${l}`;

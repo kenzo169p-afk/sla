@@ -147,11 +147,16 @@ function renderApp() {
   if (userTeam.squad) {
     userTeam.squad.forEach(p => userWages += (p.salary || 0));
   }
+  const isNational = game.state.nationalTeams && game.state.nationalTeams[userTeam.id] !== undefined;
+  let userWagesHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Salários: ${formatMoney(userWages)}/sem</div>`;
+  if (isNational) {
+    userWagesHtml = `<div style="font-size: 11px; color: var(--accent-gold); margin-top: 6px; font-weight:700;">Comando Técnico de Seleção</div>`;
+  }
   document.getElementById("sidebar-manager-panel").innerHTML = `
     <div class="manager-name">${game.state.manager.name}</div>
     <div class="manager-team">${userTeam.name}</div>
     <div class="manager-balance" title="Saldo Financeiro">${formatMoney(userTeam.budget || 0)}</div>
-    <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Salários: ${formatMoney(userWages)}/sem</div>
+    ${userWagesHtml}
   `;
 
   // 2. Render target Screen
@@ -246,12 +251,13 @@ function renderDashboard(container) {
   }
 
   // Mini table of user's league
-  const league = game.state.database[game.state.manager.leagueId];
+  const leagueId = game.state.manager.leagueId || Object.keys(game.state.database)[0];
+  const league = game.state.database[leagueId];
   const sortedTeams = [...league.teams].sort((a, b) => b.points - a.points || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
   const userIdx = sortedTeams.findIndex(t => t.id === clubTeam.id);
   
   // Show 3 teams above and 3 below user team
-  const start = Math.max(0, Math.min(sortedTeams.length - 6, userIdx - 2));
+  const start = userIdx >= 0 ? Math.max(0, Math.min(sortedTeams.length - 6, userIdx - 2)) : 0;
   const sliceTeams = sortedTeams.slice(start, start + 7);
 
   let standingsHtml = `
@@ -1236,7 +1242,7 @@ function renderMundialStandings(card) {
 function renderSelecoesStandings(card) {
   const sf = game.state.selecoesFixtures;
   if (!sf) {
-    card.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">A Copa de Seleções acontecerá nas semanas 48 a 52 com as principais seleções.</div>`;
+    card.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">A Copa de Seleções acontecerá nas semanas 48 a 54 com as principais seleções.</div>`;
     return;
   }
 
@@ -1252,7 +1258,7 @@ function renderSelecoesStandings(card) {
 
   let groupsHtml = `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-bottom:24px;">`;
   groupStandings.forEach((gStand, gIdx) => {
-    const groupLetter = gIdx === 0 ? "A" : "B";
+    const groupLetter = String.fromCharCode(65 + gIdx);
     let rowsHtml = "";
     gStand.forEach((team, tIdx) => {
       rowsHtml += `
@@ -1300,7 +1306,7 @@ function renderSelecoesStandings(card) {
   } else {
     let knockRoundsHtml = "";
     sf.knockoutRounds.forEach((round, rIdx) => {
-      const stageName = rIdx === 0 ? "Semifinais" : "Grande Final";
+      const stageName = rIdx === 0 ? "Oitavas de Final" : (rIdx === 1 ? "Quartas de Final" : (rIdx === 2 ? "Semifinais" : "Grande Final"));
       let matchesHtml = "";
       round.forEach(m => {
         const home = game.findTeamById(m.homeId) || { name: "A definir", colors: ["#777", "#333"], flag: "" };
@@ -1377,9 +1383,13 @@ function renderSelecoesStandings(card) {
 // Render Transfer Market (Mercado da Bola) View
 let currentMarketTab = "listed"; // "listed", "search", "free_agents"
 let marketFilters = {
+  name: "",
+  club: "ALL",
   pos: "ALL",
   rating: "ALL",
-  age: "ALL"
+  age: "ALL",
+  page: 1,
+  pageSize: 15
 };
 
 function renderMarket(container) {
@@ -1399,10 +1409,29 @@ function renderMarket(container) {
   `;
   container.appendChild(bar);
 
+  // Gather all clubs dynamically from the database
+  const allClubs = [];
+  if (game.state && game.state.database) {
+    for (const league of Object.values(game.state.database)) {
+      league.teams.forEach(team => {
+        allClubs.push(team.name);
+      });
+    }
+  }
+  allClubs.sort((a, b) => a.localeCompare(b));
+  const clubOptions = allClubs.map(c => `<option value="${c}" ${marketFilters.club === c ? 'selected' : ''}>${c}</option>`).join("");
+
   // Filters Bar
   const filtersDiv = document.createElement("div");
   filtersDiv.className = "search-filter-bar";
   filtersDiv.innerHTML = `
+    <input type="text" id="market-search-name" class="form-control" placeholder="Buscar por nome..." value="${marketFilters.name || ''}" oninput="applyMarketFilters()" style="flex-grow: 1; max-width: 250px; min-width: 150px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 8px 12px; border-radius: 4px;">
+    
+    <select id="market-filter-club" onchange="applyMarketFilters()" ${currentMarketTab === 'free_agents' ? 'disabled style="opacity: 0.5;"' : ''}>
+      <option value="ALL" ${marketFilters.club === 'ALL' ? 'selected' : ''}>Todos os Clubes</option>
+      ${clubOptions}
+    </select>
+
     <select id="market-filter-pos" onchange="applyMarketFilters()">
       <option value="ALL" ${marketFilters.pos === 'ALL' ? 'selected' : ''}>Todas as Posições</option>
       <option value="GOL" ${marketFilters.pos === 'GOL' ? 'selected' : ''}>Goleiro (GOL)</option>
@@ -1440,13 +1469,19 @@ function renderMarket(container) {
 
 function switchMarketTab(tabId) {
   currentMarketTab = tabId;
+  marketFilters.page = 1;
+  marketFilters.name = "";
+  marketFilters.club = "ALL";
   renderApp();
 }
 
 function applyMarketFilters() {
+  marketFilters.name = document.getElementById("market-search-name").value;
+  marketFilters.club = document.getElementById("market-filter-club") ? document.getElementById("market-filter-club").value : "ALL";
   marketFilters.pos = document.getElementById("market-filter-pos").value;
   marketFilters.rating = document.getElementById("market-filter-rating").value;
   marketFilters.age = document.getElementById("market-filter-age").value;
+  marketFilters.page = 1;
   drawMarketList();
 }
 
@@ -1484,7 +1519,18 @@ function drawMarketList() {
     }
   }
 
-  // Filter list
+  // Filter list by name
+  if (marketFilters.name && marketFilters.name.trim() !== "") {
+    const searchVal = marketFilters.name.toLowerCase().trim();
+    playerList = playerList.filter(item => item.player.name.toLowerCase().includes(searchVal));
+  }
+
+  // Filter list by club
+  if (marketFilters.club && marketFilters.club !== "ALL") {
+    playerList = playerList.filter(item => item.team && item.team.name === marketFilters.club);
+  }
+
+  // Filter list by position
   if (marketFilters.pos !== "ALL") {
     playerList = playerList.filter(item => item.player.position === marketFilters.pos);
   }
@@ -1503,9 +1549,19 @@ function drawMarketList() {
     else playerList = playerList.filter(item => item.player.age >= 30);
   }
 
+  // Pagination logic
+  const totalItems = playerList.length;
+  const totalPages = Math.ceil(totalItems / marketFilters.pageSize) || 1;
+  if (marketFilters.page > totalPages) marketFilters.page = totalPages;
+  if (marketFilters.page < 1) marketFilters.page = 1;
+
+  const startIndex = (marketFilters.page - 1) * marketFilters.pageSize;
+  const endIndex = startIndex + marketFilters.pageSize;
+  const paginatedPlayers = playerList.slice(startIndex, endIndex);
+
   // Draw Table
   let tbodyHtml = "";
-  playerList.slice(0, 30).forEach(item => { // limit to 30 visible
+  paginatedPlayers.forEach(item => {
     tbodyHtml += `
       <tr>
         <td>
@@ -1533,6 +1589,17 @@ function drawMarketList() {
     tbodyHtml = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum jogador encontrado com estes filtros.</td></tr>`;
   }
 
+  let paginationHtml = "";
+  if (totalPages > 1) {
+    paginationHtml = `
+      <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:20px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05);">
+        <button class="btn-secondary" style="width:auto; padding:6px 12px; font-size:12px; cursor:pointer;" onclick="changeMarketPage(${marketFilters.page - 1})" ${marketFilters.page === 1 ? 'disabled style="opacity:0.5; cursor:default;"' : ''}>Anterior</button>
+        <span style="font-size:13px; color:var(--text-muted);">Página <strong style="color:var(--accent-cyan);">${marketFilters.page}</strong> de ${totalPages} (Total: ${totalItems})</span>
+        <button class="btn-secondary" style="width:auto; padding:6px 12px; font-size:12px; cursor:pointer;" onclick="changeMarketPage(${marketFilters.page + 1})" ${marketFilters.page === totalPages ? 'disabled style="opacity:0.5; cursor:default;"' : ''}>Próxima</button>
+      </div>
+    `;
+  }
+
   card.innerHTML = `
     <table class="premium-table">
       <thead>
@@ -1550,9 +1617,14 @@ function drawMarketList() {
         ${tbodyHtml}
       </tbody>
     </table>
-    ${playerList.length > 30 ? `<div style="text-align:center; padding-top:16px; font-size:12px; color:var(--text-muted);">Mostrando os primeiros 30 resultados de ${playerList.length}. Refine sua busca.</div>` : ''}
+    ${paginationHtml}
   `;
 }
+
+window.changeMarketPage = (newPage) => {
+  marketFilters.page = newPage;
+  drawMarketList();
+};
 
 // Bidding Negotiation Modals
 let activeNegotiationPlayer = null;
@@ -1857,7 +1929,7 @@ function openJobOffersModal() {
       </div>
     </div>
     
-    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Com base nos seus resultados, os seguintes clubes enviaram propostas oficiais de contrato para você:</p>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Com base nos seus resultados, as seguintes equipes (clubes ou seleções) enviaram propostas oficiais de contrato para você:</p>
     <div style="display:flex; flex-direction:column; gap:16px; max-height: 380px; overflow-y: auto; padding-right: 6px;">
   `;
 
@@ -1904,7 +1976,12 @@ function openJobOffersModal() {
 }
 
 function acceptJobOfferUI(teamId, leagueId) {
-  if (confirm("Tem certeza que deseja aceitar este cargo? Você deixará seu time atual imediatamente e assumirá o comando técnico deste novo clube.")) {
+  const isNational = game.state.nationalTeams && game.state.nationalTeams[teamId] !== undefined;
+  const promptText = isNational 
+    ? "Tem certeza que deseja aceitar este cargo? Você deixará seu clube atual imediatamente e assumirá o comando técnico desta Seleção Nacional!"
+    : "Tem certeza que deseja aceitar este cargo? Você deixará seu time atual imediatamente e assumirá o comando técnico deste novo clube.";
+  
+  if (confirm(promptText)) {
     if (game.acceptJobOffer(teamId, leagueId)) {
       closeModal("modal-job-offers");
       window.location.reload();
@@ -2078,6 +2155,23 @@ function renderLedgerTable(userTeam) {
 
 function renderStadium(container) {
   const userTeam = game.findTeamById(game.state.manager.teamId);
+  const isNational = game.state.nationalTeams && game.state.nationalTeams[userTeam.id] !== undefined;
+
+  if (isNational) {
+    container.innerHTML = `
+      <div class="glass-card" style="text-align: center; padding: 48px; border: 1px solid var(--border-glow); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+        <div style="font-size: 48px;">🏟️</div>
+        <h3 style="color: var(--accent-cyan); font-size: 20px; font-weight: 800; margin: 0;">Gestão de Seleção</h3>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 450px; margin: 0 auto; text-align: center;">
+          Finanças, patrocinadores e benfeitorias de infraestrutura de estádio são de responsabilidade da Confederação Nacional de Futebol do/a <strong>${userTeam.name}</strong>.
+          <br><br>
+          Como selecionador nacional, seu foco exclusivo é convocar os melhores atletas e liderar o elenco rumo ao título mundial.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
   game.initDefaultSponsorsIfMissing(userTeam);
   game.ensureTeamFinanceLog(userTeam);
   game.initLoansIfMissing(userTeam);

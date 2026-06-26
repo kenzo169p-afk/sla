@@ -419,16 +419,161 @@ class GameEngine {
   }
 
   generateNationalTeamsAndFixtures() {
-    const nats = ["Brazilian", "English", "Spanish", "Argentinian", "German", "French", "Italian", "Portuguese"];
+    const nats = [
+      "Argentinian", "French", "Spanish", "English", "Brazilian", "Belgian", "Dutch", "Portuguese",
+      "Colombian", "Italian", "Croatian", "German", "Moroccan", "Uruguayan", "American", "Senegalese",
+      "Japanese", "Swiss", "Iranian", "Danish", "Korean", "Australian", "Ukrainian", "Austrian",
+      "Polish", "Swedish", "Welsh", "Ecuadorian", "Chilean", "Mexican", "Paraguayan", "Saudi",
+      "Peruvian", "Venezuelan", "Bolivian", "Tunisian", "Algerian", "Egyptian", "Nigerian", "Cameroonian",
+      "Ivorian", "Malian", "Canadian", "CostaRican", "Panamanian", "Jamaican", "Turkish", "Greek",
+      "Norwegian", "Scottish", "Irish", "Romanian", "Slovak", "Slovenian", "Czech", "Hungarian",
+      "Serbian", "Finnish", "Icelandic", "Albanian", "Macedonian", "Georgian", "Bosnian", "Qatari",
+      "Iraqi", "UAE", "Omani", "Uzbek", "Chinese", "Jordanian", "Bahraini", "Syrian",
+      "Palestinian", "Kyrgyz", "Vietnamese", "Thai", "NorthKorean", "SouthAfrican", "Ghanaian", "Congolese",
+      "CapeVerdean", "Guinean", "Gabonese", "Zambian", "Honduran", "Salvadoran", "Kiwi", "Bulgarian",
+      "Montenegrin", "NorthernIrish", "Luxembourger", "Armenian", "Kazakh", "Azerbaijani", "Angolan", "Ugandan"
+    ];
+    
     const countryNames = {
-      "Brazilian": { name: "Brasil", flag: "🇧🇷" },
-      "English": { name: "Inglaterra", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Spanish": { name: "Espanha", flag: "🇪🇸" },
-      "Argentinian": { name: "Argentina", flag: "🇦🇷" },
-      "German": { name: "Alemanha", flag: "🇩🇪" },
-      "French": { name: "França", flag: "🇫🇷" },
-      "Italian": { name: "Itália", flag: "🇮🇹" },
-      "Portuguese": { name: "Portugal", flag: "🇵🇹" }
+      "Argentinian": { name: "Argentina", flag: "🇦🇷", colors: ["#87cef8", "#ffffff"], avgRating: 88 },
+      "French": { name: "França", flag: "🇫🇷", colors: ["#00209f", "#ffffff"], avgRating: 87 },
+      "Spanish": { name: "Espanha", flag: "🇪🇸", colors: ["#ff0000", "#ffff00"], avgRating: 87 },
+      "English": { name: "Inglaterra", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", colors: ["#ffffff", "#ff0000"], avgRating: 86 },
+      "Brazilian": { name: "Brasil", flag: "🇧🇷", colors: ["#fedf00", "#009c3b"], avgRating: 86 },
+      "Belgian": { name: "Bélgica", flag: "🇧🇪", colors: ["#e30613", "#ffcc00"], avgRating: 85 },
+      "Dutch": { name: "Holanda", flag: "🇳🇱", colors: ["#ff6600", "#ffffff"], avgRating: 85 },
+      "Portuguese": { name: "Portugal", flag: "🇵🇹", colors: ["#ff0000", "#008000"], avgRating: 85 },
+      "Colombian": { name: "Colômbia", flag: "🇨🇴", colors: ["#ffcc00", "#0033a0"], avgRating: 84 },
+      "Italian": { name: "Itália", flag: "🇮🇹", colors: ["#002f6c", "#ffffff"], avgRating: 84 },
+      "Croatian": { name: "Croácia", flag: "🇭🇷", colors: ["#ff0000", "#ffffff"], avgRating: 83 },
+      "German": { name: "Alemanha", flag: "🇩🇪", colors: ["#ffffff", "#111111"], avgRating: 84 },
+      "Moroccan": { name: "Marrocos", flag: "🇲🇦", colors: ["#c1272d", "#006233"], avgRating: 83 },
+      "Uruguayan": { name: "Uruguai", flag: "🇺🇾", colors: ["#5cbbf6", "#ffffff"], avgRating: 83 },
+      "American": { name: "Estados Unidos", flag: "🇺🇸", colors: ["#ffffff", "#000080"], avgRating: 81 },
+      "Senegalese": { name: "Senegal", flag: "🇸🇳", colors: ["#00a859", "#fcd116"], avgRating: 81 },
+      "Japanese": { name: "Japão", flag: "🇯🇵", colors: ["#ffffff", "#e2001a"], avgRating: 81 },
+      "Swiss": { name: "Suíça", flag: "🇨🇭", colors: ["#d52b1e", "#ffffff"], avgRating: 80 },
+      "Iranian": { name: "Irã", flag: "🇮🇷", colors: ["#239e46", "#ffffff"], avgRating: 79 },
+      "Danish": { name: "Dinamarca", flag: "🇩🇰", colors: ["#c8102e", "#ffffff"], avgRating: 80 },
+      "Korean": { name: "Coreia do Sul", flag: "🇰🇷", colors: ["#ffffff", "#cd2e3a"], avgRating: 79 },
+      "Australian": { name: "Austrália", flag: "🇦🇺", colors: ["#00008b", "#ffffff"], avgRating: 78 },
+      "Ukrainian": { name: "Ucrânia", flag: "🇺🇦", colors: ["#ffd700", "#0057b7"], avgRating: 79 },
+      "Austrian": { name: "Áustria", flag: "🇦🇹", colors: ["#ed2939", "#ffffff"], avgRating: 79 },
+      "Polish": { name: "Polônia", flag: "🇵🇱", colors: ["#ffffff", "#dc143c"], avgRating: 78 },
+      "Swedish": { name: "Suécia", flag: "🇸🇪", colors: ["#006aa7", "#fecc00"], avgRating: 79 },
+      "Welsh": { name: "Gales", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", colors: ["#ffffff", "#c8102e"], avgRating: 77 },
+      "Ecuadorian": { name: "Equador", flag: "🇪🇨", colors: ["#ffcc00", "#0033a0"], avgRating: 78 },
+      "Chilean": { name: "Chile", flag: "🇨🇱", colors: ["#0039a6", "#d52b1e"], avgRating: 77 },
+      "Mexican": { name: "México", flag: "🇲🇽", colors: ["#006847", "#ffffff"], avgRating: 79 },
+      "Paraguayan": { name: "Paraguai", flag: "🇵🇾", colors: ["#d52b1e", "#0038a8"], avgRating: 76 },
+      "Saudi": { name: "Arábia Saudita", flag: "🇸🇦", colors: ["#006c35", "#ffffff"], avgRating: 75 },
+      "Peruvian": { name: "Peru", flag: "🇵🇪", colors: ["#ffffff", "#ff0000"], avgRating: 78 },
+      "Venezuelan": { name: "Venezuela", flag: "🇻🇪", colors: ["#7a1c1c", "#ffffff"], avgRating: 77 },
+      "Bolivian": { name: "Bolívia", flag: "🇧🇴", colors: ["#007a33", "#ffffff"], avgRating: 72 },
+      "Tunisian": { name: "Tunísia", flag: "🇹🇳", colors: ["#e20e17", "#ffffff"], avgRating: 77 },
+      "Algerian": { name: "Argélia", flag: "🇩🇿", colors: ["#006233", "#ffffff"], avgRating: 78 },
+      "Egyptian": { name: "Egito", flag: "🇪🇬", colors: ["#c1272d", "#ffffff"], avgRating: 79 },
+      "Nigerian": { name: "Nigéria", flag: "🇳🇬", colors: ["#008751", "#ffffff"], avgRating: 79 },
+      "Cameroonian": { name: "Camarões", flag: "🇨🇲", colors: ["#007a5e", "#ffcc00"], avgRating: 76 },
+      "Ivorian": { name: "Costa do Marfim", flag: "🇨🇮", colors: ["#ff8200", "#009e60"], avgRating: 78 },
+      "Malian": { name: "Mali", flag: "🇲🇱", colors: ["#fcdd09", "#fc1111"], avgRating: 75 },
+      "Canadian": { name: "Canadá", flag: "🇨🇦", colors: ["#ff0000", "#ffffff"], avgRating: 77 },
+      "CostaRican": { name: "Costa Rica", flag: "🇨🇷", colors: ["#002b7f", "#fc1111"], avgRating: 75 },
+      "Panamanian": { name: "Panamá", flag: "🇵🇦", colors: ["#002b7f", "#da121a"], avgRating: 75 },
+      "Jamaican": { name: "Jamaica", flag: "🇯🇲", colors: ["#000000", "#fed100"], avgRating: 74 },
+      "Turkish": { name: "Turquia", flag: "🇹🇷", colors: ["#e30a17", "#ffffff"], avgRating: 80 },
+      "Greek": { name: "Grécia", flag: "🇬🇷", colors: ["#0d5eaf", "#ffffff"], avgRating: 77 },
+      "Norwegian": { name: "Noruega", flag: "🇳🇴", colors: ["#ef2b2d", "#00205b"], avgRating: 80 },
+      "Scottish": { name: "Escócia", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", colors: ["#005eb8", "#ffffff"], avgRating: 77 },
+      "Irish": { name: "Irlanda", flag: "🇮🇪", colors: ["#169b62", "#ff883e"], avgRating: 75 },
+      "Romanian": { name: "Romênia", flag: "🇷🇴", colors: ["#002b7f", "#fcd116"], avgRating: 76 },
+      "Slovak": { name: "Eslováquia", flag: "🇸🇰", colors: ["#ffffff", "#0b4ea2"], avgRating: 76 },
+      "Slovenian": { name: "Eslovênia", flag: "🇸🇮", colors: ["#ffffff", "#005cff"], avgRating: 76 },
+      "Czech": { name: "República Tcheca", flag: "🇨🇿", colors: ["#ffffff", "#d7141a"], avgRating: 78 },
+      "Hungarian": { name: "Hungria", flag: "🇭🇺", colors: ["#c8102e", "#436f4d"], avgRating: 78 },
+      "Serbian": { name: "Sérvia", flag: "🇷🇸", colors: ["#c8102e", "#0c4076"], avgRating: 79 },
+      "Finnish": { name: "Finlândia", flag: "🇫🇮", colors: ["#ffffff", "#003580"], avgRating: 74 },
+      "Icelandic": { name: "Islândia", flag: "🇮🇸", colors: ["#00205b", "#ef2b2d"], avgRating: 73 },
+      "Albanian": { name: "Albânia", flag: "🇦🇱", colors: ["#e30e14", "#000000"], avgRating: 74 },
+      "Macedonian": { name: "Macedônia do Norte", flag: "🇲🇰", colors: ["#d20000", "#ffe600"], avgRating: 73 },
+      "Georgian": { name: "Geórgia", flag: "🇬🇪", colors: ["#ffffff", "#ff0000"], avgRating: 76 },
+      "Bosnian": { name: "Bósnia", flag: "🇧🇦", colors: ["#002f6c", "#ffcc00"], avgRating: 73 },
+      "Qatari": { name: "Catar", flag: "🇶🇦", colors: ["#8a1538", "#ffffff"], avgRating: 76 },
+      "Iraqi": { name: "Iraque", flag: "🇮🇶", colors: ["#ff0000", "#007a3d"], avgRating: 75 },
+      "UAE": { name: "Emirados Árabes", flag: "🇦🇪", colors: ["#ff0000", "#00732f"], avgRating: 74 },
+      "Omani": { name: "Omã", flag: "🇴🇲", colors: ["#ff0000", "#008000"], avgRating: 73 },
+      "Uzbek": { name: "Uzbequistão", flag: "🇺🇿", colors: ["#00a6ff", "#009933"], avgRating: 75 },
+      "Chinese": { name: "China", flag: "🇨🇳", colors: ["#de2910", "#ffde00"], avgRating: 70 },
+      "Jordanian": { name: "Jordânia", flag: "🇯🇴", colors: ["#ff0000", "#007a3d"], avgRating: 74 },
+      "Bahraini": { name: "Bahrein", flag: "🇧🇭", colors: ["#ce1126", "#ffffff"], avgRating: 72 },
+      "Syrian": { name: "Síria", flag: "🇸🇾", colors: ["#e31b23", "#007a3d"], avgRating: 71 },
+      "Palestinian": { name: "Palestina", flag: "🇵🇸", colors: ["#000000", "#ff0000"], avgRating: 72 },
+      "Kyrgyz": { name: "Quirguistão", flag: "🇰🇬", colors: ["#e30a17", "#fcd116"], avgRating: 70 },
+      "Vietnamese": { name: "Vietnã", flag: "🇻🇳", colors: ["#da251d", "#ffff00"], avgRating: 69 },
+      "Thai": { name: "Tailândia", flag: "🇹🇭", colors: ["#a51931", "#2d2a4a"], avgRating: 71 },
+      "NorthKorean": { name: "Coreia do Norte", flag: "🇰🇵", colors: ["#024fa2", "#ed1c24"], avgRating: 69 },
+      "SouthAfrican": { name: "África do Sul", flag: "🇿🇦", colors: ["#007a4d", "#ffb612"], avgRating: 76 },
+      "Ghanaian": { name: "Gana", flag: "🇬🇭", colors: ["#e2183c", "#006b3f"], avgRating: 75 },
+      "Congolese": { name: "RDC", flag: "🇨🇩", colors: ["#007fff", "#fcd116"], avgRating: 74 },
+      "CapeVerdean": { name: "Cabo Verde", flag: "🇨🇻", colors: ["#002a8f", "#ffd100"], avgRating: 75 },
+      "Guinean": { name: "Guiné", flag: "🇬🇳", colors: ["#ce1126", "#009460"], avgRating: 74 },
+      "Gabonese": { name: "Gabão", flag: "🇬🇦", colors: ["#009e60", "#3a75c4"], avgRating: 73 },
+      "Zambian": { name: "Zâmbia", flag: "🇿🇲", colors: ["#198a00", "#ff7a00"], avgRating: 72 },
+      "Honduran": { name: "Honduras", flag: "🇭🇳", colors: ["#0073cf", "#ffffff"], avgRating: 71 },
+      "Salvadoran": { name: "El Salvador", flag: "🇸🇻", colors: ["#0f47af", "#ffffff"], avgRating: 70 },
+      "Kiwi": { name: "Nova Zelândia", flag: "🇳🇿", colors: ["#000000", "#ffffff"], avgRating: 69 },
+      "Bulgarian": { name: "Bulgária", flag: "🇧🇬", colors: ["#ffffff", "#00966e"], avgRating: 72 },
+      "Montenegrin": { name: "Montenegro", flag: "🇲🇪", colors: ["#c1272d", "#d4af37"], avgRating: 72 },
+      "NorthernIrish": { name: "Irlanda do Norte", flag: "🇬🇧", colors: ["#ffffff", "#ff0000"], avgRating: 72 },
+      "Luxembourger": { name: "Luxemburgo", flag: "🇱🇺", colors: ["#ea1429", "#00a2e8"], avgRating: 71 },
+      "Armenian": { name: "Armênia", flag: "🇦🇲", colors: ["#d92323", "#f2a800"], avgRating: 70 },
+      "Kazakh": { name: "Cazaquistão", flag: "🇰🇿", colors: ["#00afca", "#fec100"], avgRating: 70 },
+      "Azerbaijani": { name: "Azerbaijão", flag: "🇦🇿", colors: ["#0097c3", "#3f9c35"], avgRating: 69 },
+      "Angolan": { name: "Angola", flag: "🇦🇴", colors: ["#d81e05", "#000000"], avgRating: 69 },
+      "Ugandan": { name: "Uganda", flag: "🇺🇬", colors: ["#000000", "#fadc00"], avgRating: 68 }
+    };
+
+    const generateNationalPlayer = (nat, pos, avgRating) => {
+      const rating = Math.max(45, Math.min(99, Math.round(avgRating + (Math.random() * 8 - 4))));
+      const age = Math.floor(Math.random() * 12) + 20; // 20 to 31
+      const name = (typeof window !== "undefined" && window.generatePlayerName)
+        ? window.generatePlayerName(nat)
+        : `${pos} Player`;
+      const traits = (typeof window !== "undefined" && window.generateTraits)
+        ? window.generateTraits(pos)
+        : ["Passe", "Velocidade"];
+      const value = (typeof window !== "undefined" && window.calculatePlayerValue)
+        ? window.calculatePlayerValue(rating, age, pos)
+        : 500000;
+      const salary = (typeof window !== "undefined" && window.calculatePlayerSalary)
+        ? window.calculatePlayerSalary(rating, age, value)
+        : 2000;
+      
+      let potential = rating;
+      if (age <= 25) {
+        potential = Math.min(99, rating + Math.floor(Math.random() * 8) + 2);
+      }
+      
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        name: name,
+        position: pos,
+        rating: rating,
+        potential: potential,
+        age: age,
+        nationality: nat,
+        value: value,
+        salary: salary,
+        goals: 0,
+        assists: 0,
+        yellowCards: 0,
+        redCards: 0,
+        games: 0,
+        condition: 100,
+        morale: 90,
+        skills: traits,
+        contract: 3
+      };
     };
 
     this.state.nationalTeams = {};
@@ -445,20 +590,44 @@ class GameEngine {
 
     nats.forEach(nat => {
       const info = countryNames[nat];
-      const natPlayers = allPlayers.filter(item => item.player.nationality === nat);
+      const natPlayers = allPlayers.filter(item => item.player.nationality === nat).map(item => item.player);
       
-      const gks = natPlayers.filter(item => item.player.position === "GOL").sort((a,b) => b.player.rating - a.player.rating).slice(0, 2);
-      const defs = natPlayers.filter(item => item.player.position === "ZAG" || item.player.position === "LAT").sort((a,b) => b.player.rating - a.player.rating).slice(0, 6);
-      const mids = natPlayers.filter(item => item.player.position === "MEI").sort((a,b) => b.player.rating - a.player.rating).slice(0, 6);
-      const atas = natPlayers.filter(item => item.player.position === "ATA").sort((a,b) => b.player.rating - a.player.rating).slice(0, 4);
+      const gks = natPlayers.filter(p => p.position === "GOL").sort((a,b) => b.rating - a.rating);
+      const defs = natPlayers.filter(p => p.position === "ZAG" || p.position === "LAT").sort((a,b) => b.rating - a.rating);
+      const mids = natPlayers.filter(p => p.position === "MEI").sort((a,b) => b.rating - a.rating);
+      const atas = natPlayers.filter(p => p.position === "ATA").sort((a,b) => b.rating - a.rating);
 
-      let squad = [...gks, ...defs, ...mids, ...atas].map(item => item.player);
-
-      // Backup fallback if squad lacks players
-      if (squad.length < 18) {
-        const sortedAll = natPlayers.sort((a,b) => b.player.rating - a.player.rating).slice(0, 18).map(item => item.player);
-        squad = sortedAll;
+      const finalGks = gks.slice(0, 2);
+      while (finalGks.length < 2) {
+        finalGks.push(generateNationalPlayer(nat, "GOL", info.avgRating));
       }
+
+      const finalDefs = defs.slice(0, 6);
+      while (finalDefs.length < 6) {
+        const subPos = Math.random() < 0.6 ? "ZAG" : "LAT";
+        finalDefs.push(generateNationalPlayer(nat, subPos, info.avgRating));
+      }
+
+      const finalMids = mids.slice(0, 6);
+      while (finalMids.length < 6) {
+        finalMids.push(generateNationalPlayer(nat, "MEI", info.avgRating));
+      }
+
+      const finalAtas = atas.slice(0, 4);
+      while (finalAtas.length < 4) {
+        finalAtas.push(generateNationalPlayer(nat, "ATA", info.avgRating));
+      }
+
+      let squad = [...finalGks, ...finalDefs, ...finalMids, ...finalAtas];
+
+      // Sort squad by position, then rating descending
+      squad.sort((a, b) => {
+        const posOrder = { "GOL": 0, "LAT": 1, "ZAG": 2, "MEI": 3, "ATA": 4 };
+        if (posOrder[a.position] !== posOrder[b.position]) {
+          return posOrder[a.position] - posOrder[b.position];
+        }
+        return b.rating - a.rating;
+      });
 
       // Map to starting XI for AI national teams
       squad.forEach((p, idx) => {
@@ -467,21 +636,38 @@ class GameEngine {
       });
 
       this.state.nationalTeams[info.name] = {
+        id: info.name,
         name: info.name,
         flag: info.flag,
+        rating: info.avgRating,
         squad: squad,
-        colors: nat === "Brazilian" ? ["#fedf00", "#009c3b"] : (nat === "English" ? ["#ffffff", "#ff0000"] : ["#ff0000", "#ffffff"]),
+        colors: info.colors,
         played: 0,
         points: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, form: []
       };
     });
 
-    // 2. Set up Copa de Seleções
+    // 2. Set up Copa de Seleções (qualify top 64 based on rating, draw 16 groups of 4)
+    const qualifiedTeamNames = Object.keys(this.state.nationalTeams)
+      .sort((a, b) => {
+        const infoA = Object.values(countryNames).find(c => c.name === a);
+        const infoB = Object.values(countryNames).find(c => c.name === b);
+        return infoB.avgRating - infoA.avgRating;
+      })
+      .slice(0, 64);
+
+    const pot1 = qualifiedTeamNames.slice(0, 16).sort(() => Math.random() - 0.5);
+    const pot2 = qualifiedTeamNames.slice(16, 32).sort(() => Math.random() - 0.5);
+    const pot3 = qualifiedTeamNames.slice(32, 48).sort(() => Math.random() - 0.5);
+    const pot4 = qualifiedTeamNames.slice(48, 64).sort(() => Math.random() - 0.5);
+
+    const groups = [];
+    for (let i = 0; i < 16; i++) {
+      groups.push([pot1[i], pot2[i], pot3[i], pot4[i]]);
+    }
+
     this.state.selecoesFixtures = {
-      groups: [
-        ["Brasil", "Argentina", "Portugal", "Inglaterra"],
-        ["Espanha", "Itália", "Alemanha", "França"]
-      ],
+      groups: groups,
       groupFixtures: [],
       knockoutRounds: [],
       currentStage: "group",
@@ -553,17 +739,32 @@ class GameEngine {
       return stats;
     });
 
-    // Semifinals
-    const sem1Home = standings[0][0].name;
-    const sem1Away = standings[1][1].name;
-    const sem2Home = standings[1][0].name;
-    const sem2Away = standings[0][1].name;
-
+    // Round of 16 (16 teams -> 8 matches)
     sf.knockoutRounds = [
+      // Round 0: Round of 16
       [
-        { homeId: sem1Home, awayId: sem1Away, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
-        { homeId: sem2Home, awayId: sem2Away, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null }
+        { homeId: standings[0][0].name, awayId: standings[1][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[2][0].name, awayId: standings[3][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[4][0].name, awayId: standings[5][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[6][0].name, awayId: standings[7][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[8][0].name, awayId: standings[9][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[10][0].name, awayId: standings[11][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[12][0].name, awayId: standings[13][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: standings[14][0].name, awayId: standings[15][0].name, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null }
       ],
+      // Round 1: Quarterfinals (4 matches)
+      [
+        { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null }
+      ],
+      // Round 2: Semifinals (2 matches)
+      [
+        { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null },
+        { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null }
+      ],
+      // Round 3: Grand Final (1 match)
       [
         { homeId: null, awayId: null, scoreHome: null, scoreAway: null, scorersHome: [], scorersAway: [], simulated: false, isPenalties: false, winnerId: null }
       ]
@@ -782,12 +983,31 @@ class GameEngine {
           this.state.news = [];
         }
 
-        // Self-healing: ensure all national teams have played initialized
+        // Self-healing: ensure all national teams have played, id and rating initialized
         if (this.state.nationalTeams) {
-          Object.values(this.state.nationalTeams).forEach(nt => {
-            if (nt.played === undefined) {
-              nt.played = 0;
-            }
+          const countryNames = {
+            "Argentina": 88, "França": 87, "Espanha": 87, "Inglaterra": 86, "Brasil": 86,
+            "Bélgica": 85, "Holanda": 85, "Portugal": 85, "Colômbia": 84, "Itália": 84,
+            "Croácia": 83, "Alemanha": 84, "Marrocos": 83, "Uruguai": 83, "Estados Unidos": 81,
+            "Senegal": 81, "Japão": 81, "Suíça": 80, "Irã": 79, "Dinamarca": 80,
+            "Coreia do Sul": 79, "Austrália": 78, "Ucrânia": 79, "Áustria": 79, "Polônia": 78,
+            "Suécia": 79, "Gales": 77, "Equador": 78, "Chile": 77, "México": 79,
+            "Paraguai": 76, "Arábia Saudita": 75, "Peru": 78, "Venezuela": 77, "Bolívia": 72,
+            "Tunísia": 77, "Argélia": 78, "Egito": 79, "Nigéria": 79, "Camarões": 76,
+            "Costa do Marfim": 78, "Mali": 75, "Canadá": 77, "Costa Rica": 75, "Panamá": 75,
+            "Jamaica": 74, "Turquia": 80, "Grécia": 77, "Noruega": 80, "Tcheca": 77,
+            "Escócia": 77, "Eslovênia": 75, "Eslováquia": 75, "Irlanda": 75, "Finlândia": 74,
+            "Albânia": 74, "Geórgia": 75, "Romênia": 75, "Hungria": 76, "Sérvia": 77,
+            "Islândia": 74, "Bósnia": 74, "Irlanda do Norte": 73, "Guiné": 75, "África do Sul": 74,
+            "Gana": 75, "Cabo Verde": 74, "RD Congo": 75, "Catar": 75, "Emirados Árabes": 73,
+            "Iraque": 73, "Omã": 72, "Uzbequistão": 74, "China": 71, "Honduras": 73,
+            "El Salvador": 72, "Nova Zelândia": 70
+          };
+          Object.keys(this.state.nationalTeams).forEach(name => {
+            const nt = this.state.nationalTeams[name];
+            if (nt.id === undefined) nt.id = name;
+            if (nt.rating === undefined) nt.rating = countryNames[name] || 75;
+            if (nt.played === undefined) nt.played = 0;
           });
         }
 
@@ -817,6 +1037,11 @@ class GameEngine {
           }
           this.initDefaultSponsorsIfMissing(userTeam);
           this.ensureTeamFinanceLog(userTeam);
+        }
+
+        // Self-healing: if selecoesFixtures has old 2-group/4-group/8-group or missing structure, regenerate it
+        if (!this.state.selecoesFixtures || !this.state.selecoesFixtures.groups || this.state.selecoesFixtures.groups.length < 16) {
+          this.generateNationalTeamsAndFixtures();
         }
 
         return true;
@@ -902,8 +1127,51 @@ class GameEngine {
     const userLeagueId = this.state.manager.leagueId;
     const week = this.state.week;
 
+    const isNationalTeam = this.state.nationalTeams && this.state.nationalTeams[userTeamId] !== undefined;
+
     // Define what competition is played in the current week
     const weekSchedule = this.getCompetitionForWeek(week);
+
+    if (isNationalTeam) {
+      if (weekSchedule.type !== "selecoes") {
+        return { type: "none", title: "Sem compromisso esta semana (Treinando Seleção)", match: null };
+      }
+      
+      const userNatName = userTeamId;
+      const sf = this.state.selecoesFixtures;
+      const roundIdx = weekSchedule.round;
+
+      if (weekSchedule.stage === "group") {
+        if (!sf || !sf.groupFixtures || !sf.groupFixtures[roundIdx]) {
+          return { type: "none", title: "Copa Internacional - Sem compromisso", match: null };
+        }
+        const roundMatches = sf.groupFixtures[roundIdx];
+        const match = roundMatches.find(m => m.homeId === userNatName || m.awayId === userNatName);
+        return {
+          type: "selecoes_group",
+          title: `Copa de Seleções - Fase de Grupos (Rodada ${roundIdx + 1})`,
+          round: roundIdx,
+          match: match,
+          allMatches: roundMatches,
+          userNatName: userNatName
+        };
+      } else {
+        if (!sf || !sf.knockoutRounds || !sf.knockoutRounds[roundIdx]) {
+          return { type: "none", title: "Copa Internacional - Eliminado", match: null };
+        }
+        const roundMatches = sf.knockoutRounds[roundIdx];
+        const match = roundMatches.find(m => m.homeId === userNatName || m.awayId === userNatName);
+        const stageName = roundIdx === 0 ? "Oitavas de Final" : (roundIdx === 1 ? "Quartas de Final" : (roundIdx === 2 ? "Semifinal" : "Grande Final"));
+        return {
+          type: "selecoes_knockout",
+          title: `Copa de Seleções - ${stageName}`,
+          round: roundIdx,
+          match: match,
+          allMatches: roundMatches,
+          userNatName: userNatName
+        };
+      }
+    }
 
     if (weekSchedule.type === "league") {
       const roundIdx = weekSchedule.round;
@@ -1015,45 +1283,8 @@ class GameEngine {
         allMatches: roundMatches
       };
     } else if (weekSchedule.type === "selecoes") {
-      const countryNames = {
-        "Brazilian": "Brasil", "English": "Inglaterra", "Spanish": "Espanha",
-        "Argentinian": "Argentina", "German": "Alemanha", "French": "França",
-        "Italian": "Itália", "Portuguese": "Portugal"
-      };
-      const userNatName = countryNames[this.state.manager.nationality] || "Brasil";
-      const sf = this.state.selecoesFixtures;
-      const roundIdx = weekSchedule.round;
-
-      if (weekSchedule.stage === "group") {
-        if (!sf || !sf.groupFixtures || !sf.groupFixtures[roundIdx]) {
-          return { type: "none", title: "Copa Internacional - Sem compromisso", match: null };
-        }
-        const roundMatches = sf.groupFixtures[roundIdx];
-        const match = roundMatches.find(m => m.homeId === userNatName || m.awayId === userNatName);
-        return {
-          type: "selecoes_group",
-          title: `Copa de Seleções - Fase de Grupos (Rodada ${roundIdx + 1})`,
-          round: roundIdx,
-          match: match,
-          allMatches: roundMatches,
-          userNatName: userNatName
-        };
-      } else {
-        if (!sf || !sf.knockoutRounds || !sf.knockoutRounds[roundIdx]) {
-          return { type: "none", title: "Copa Internacional - Eliminado", match: null };
-        }
-        const roundMatches = sf.knockoutRounds[roundIdx];
-        const match = roundMatches.find(m => m.homeId === userNatName || m.awayId === userNatName);
-        const stageName = roundIdx === 0 ? "Semifinal" : "Grande Final";
-        return {
-          type: "selecoes_knockout",
-          title: `Copa de Seleções - ${stageName}`,
-          round: roundIdx,
-          match: match,
-          allMatches: roundMatches,
-          userNatName: userNatName
-        };
-      }
+      // Normal club coach doesn't play selecoes matches interactively
+      return { type: "none", title: "Copa Internacional - Sem compromisso", match: null };
     }
 
     return { type: "none", title: "Sem compromisso esta semana", match: null };
@@ -1112,11 +1343,13 @@ class GameEngine {
       49: { type: "selecoes", stage: "group", round: 1 },
       50: { type: "selecoes", stage: "group", round: 2 },
       51: { type: "selecoes", stage: "knockout", round: 0 },
-      52: { type: "selecoes", stage: "knockout", round: 1 }
+      52: { type: "selecoes", stage: "knockout", round: 1 },
+      53: { type: "selecoes", stage: "knockout", round: 2 },
+      54: { type: "selecoes", stage: "knockout", round: 3 }
     };
 
-    if (week > 52) {
-      const extraRound = 30 + (week - 53);
+    if (week > 54) {
+      const extraRound = 30 + (week - 55);
       return { type: "league", round: extraRound };
     }
 
@@ -2132,10 +2365,30 @@ class GameEngine {
         });
 
         if (matchInfo.round === 0) {
+          // Round of 16 -> Quarterfinals
           const winners = roundMatches.map(m => m.winnerId);
           sf.knockoutRounds[1][0].homeId = winners[0];
           sf.knockoutRounds[1][0].awayId = winners[1];
+          sf.knockoutRounds[1][1].homeId = winners[2];
+          sf.knockoutRounds[1][1].awayId = winners[3];
+          sf.knockoutRounds[1][2].homeId = winners[4];
+          sf.knockoutRounds[1][2].awayId = winners[5];
+          sf.knockoutRounds[1][3].homeId = winners[6];
+          sf.knockoutRounds[1][3].awayId = winners[7];
+        } else if (matchInfo.round === 1) {
+          // Quarterfinals -> Semifinals
+          const winners = roundMatches.map(m => m.winnerId);
+          sf.knockoutRounds[2][0].homeId = winners[0];
+          sf.knockoutRounds[2][0].awayId = winners[1];
+          sf.knockoutRounds[2][1].homeId = winners[2];
+          sf.knockoutRounds[2][1].awayId = winners[3];
+        } else if (matchInfo.round === 2) {
+          // Semifinals -> Final
+          const winners = roundMatches.map(m => m.winnerId);
+          sf.knockoutRounds[3][0].homeId = winners[0];
+          sf.knockoutRounds[3][0].awayId = winners[1];
         } else {
+          // Final -> Champion!
           const finalMatch = roundMatches[0];
           const champion = this.findTeamById(finalMatch.winnerId);
           this.addNews("Campeão da Copa de Seleções", `${champion.name} vence a grande Copa de Seleções e conquista a glória internacional!`);
@@ -2612,9 +2865,28 @@ class GameEngine {
           });
 
           if (roundIdx === 0) {
+            // Round of 16 -> Quarterfinals
             const winners = sf.knockoutRounds[0].map(m => m.winnerId);
             sf.knockoutRounds[1][0].homeId = winners[0];
             sf.knockoutRounds[1][0].awayId = winners[1];
+            sf.knockoutRounds[1][1].homeId = winners[2];
+            sf.knockoutRounds[1][1].awayId = winners[3];
+            sf.knockoutRounds[1][2].homeId = winners[4];
+            sf.knockoutRounds[1][2].awayId = winners[5];
+            sf.knockoutRounds[1][3].homeId = winners[6];
+            sf.knockoutRounds[1][3].awayId = winners[7];
+          } else if (roundIdx === 1) {
+            // Quarterfinals -> Semifinals
+            const winners = sf.knockoutRounds[1].map(m => m.winnerId);
+            sf.knockoutRounds[2][0].homeId = winners[0];
+            sf.knockoutRounds[2][0].awayId = winners[1];
+            sf.knockoutRounds[2][1].homeId = winners[2];
+            sf.knockoutRounds[2][1].awayId = winners[3];
+          } else if (roundIdx === 2) {
+            // Semifinals -> Final
+            const winners = sf.knockoutRounds[2].map(m => m.winnerId);
+            sf.knockoutRounds[3][0].homeId = winners[0];
+            sf.knockoutRounds[3][0].awayId = winners[1];
           }
         }
       }
@@ -2707,10 +2979,8 @@ class GameEngine {
     const userLeagueFixtures = this.state.fixtures[this.state.manager.leagueId];
     const totalLeagueRounds = userLeagueFixtures.length;
 
-    // Check if season is over
-    // Season ends when all league rounds + cup final + continental final are finished.
-    // That means week is at least totalLeagueRounds + 7 (approx week 46/47/48)
-    const isSeasonOver = this.state.week >= totalLeagueRounds + 7;
+    // Season ends at week 54 after the Copa de Seleções final
+    const isSeasonOver = this.state.week >= 54;
 
     if (isSeasonOver) {
       this.resolveSeasonEnd();
@@ -3542,19 +3812,16 @@ class GameEngine {
     }
 
     // Bid decision formula
-    // Accept instantly if bid >= 1.2 * value.
-    // Probability based on value vs bid.
+    // Accept instantly if bid is at least 100% of the player's value (ratio >= 1.0).
     const ratio = bidAmount / player.value;
     let accepted = false;
 
-    if (ratio >= 1.2) {
+    if (ratio >= 1.0) {
       accepted = true;
-    } else if (ratio >= 1.0) {
-      accepted = Math.random() < 0.85;
     } else if (ratio >= 0.85) {
-      accepted = Math.random() < 0.45;
+      accepted = Math.random() < 0.65;
     } else {
-      accepted = Math.random() < 0.1;
+      accepted = Math.random() < 0.2;
     }
 
     if (accepted) {
@@ -4152,7 +4419,9 @@ class GameEngine {
     const userTeam = this.findTeamById(this.state.manager.teamId);
     if (!userTeam) return [];
 
-    // Get current club stats, falling back to career stats if less than 3 matches played in the current club
+    const isUserNational = this.state.nationalTeams && this.state.nationalTeams[userTeam.id] !== undefined;
+
+    // Get current club stats, falling back to career stats if less than 3 matches played in the current club/selection
     let stats = this.state.manager.currentClubStats || { wins: 0, draws: 0, losses: 0 };
     let totalGames = stats.wins + stats.draws + stats.losses;
     let usingCareerStats = false;
@@ -4190,103 +4459,124 @@ class GameEngine {
       });
     });
 
-    if (allClubs.length === 0) return [];
+    // Gather all eligible national teams
+    let eligibleNationals = [];
+    const userRep = isUserNational ? (userTeam.rating - 50) / 10 : (userTeam.reputation || 3.0);
 
-    // Filter clubs based on performance (wins, draws, losses) and reputation
+    if (this.state.nationalTeams) {
+      Object.keys(this.state.nationalTeams).forEach(natId => {
+        if (natId !== userTeam.id) {
+          const nt = this.state.nationalTeams[natId];
+          const candRep = Math.max(1.0, Math.min(5.0, (nt.rating - 50) / 10));
+          const repDiff = candRep - userRep;
+
+          let isInterested = false;
+          if (totalGames < 3) {
+            isInterested = (repDiff >= -0.6 && repDiff <= 0.4);
+          } else {
+            if (candRep >= 4.0) {
+              if (winRate >= 50 && pointsRate >= 60 && lossRate <= 25) {
+                isInterested = true;
+              }
+            } else if (candRep >= 3.0) {
+              if ((pointsRate >= 45 && lossRate <= 35) || (drawRate >= 35 && pointsRate >= 45)) {
+                isInterested = true;
+              }
+            } else if (candRep >= 2.0) {
+              if (pointsRate >= 35 && lossRate <= 45) {
+                isInterested = true;
+              } else if (pointsRate < 35 && repDiff <= -0.5) {
+                isInterested = true;
+              }
+            } else {
+              if (!(pointsRate >= 70 && repDiff <= -1.5) && !(pointsRate < 20 && candRep > userRep)) {
+                isInterested = true;
+              }
+            }
+          }
+
+          if (isInterested) {
+            eligibleNationals.push(nt);
+          }
+        }
+      });
+    }
+
+    // Now filter clubs based on performance and reputation
     let eligibleClubs = [];
-    const userRep = userTeam.reputation || 3.0;
+    if (allClubs.length > 0) {
+      allClubs.forEach(c => {
+        const candRep = c.team.reputation || 3.0;
+        const repDiff = candRep - userRep;
 
-    allClubs.forEach(c => {
-      const candRep = c.team.reputation || 3.0;
-      const repDiff = candRep - userRep;
-
-      // Check if this candidate club is interested in the manager based on stats
-      let isInterested = false;
-
-      if (totalGames < 3) {
-        // Neutral/New manager: only teams of similar level are interested
-        isInterested = (repDiff >= -0.6 && repDiff <= 0.4);
-      } else {
-        // 1. High Reputation Teams (Elite / Giants) -> candRep >= 4.0 or repDiff >= 0.8
-        if (candRep >= 4.0 || repDiff >= 0.8) {
-          // Require high win percentage & points rate, low defeat percentage
-          if (winRate >= 50 && pointsRate >= 60 && lossRate <= 25) {
-            isInterested = true;
+        let isInterested = false;
+        if (totalGames < 3) {
+          isInterested = (repDiff >= -0.6 && repDiff <= 0.4);
+        } else {
+          if (candRep >= 4.0) {
+            if (winRate >= 50 && pointsRate >= 60 && lossRate <= 25) {
+              isInterested = true;
+            }
+          } else if (candRep >= 3.0) {
+            if ((pointsRate >= 45 && lossRate <= 35) || (drawRate >= 35 && pointsRate >= 45)) {
+              isInterested = true;
+            }
+          } else if (candRep >= 2.0) {
+            if (pointsRate >= 35 && lossRate <= 45) {
+              isInterested = true;
+            } else if (pointsRate < 35 && repDiff <= -0.5) {
+              isInterested = true;
+            }
+          } else {
+            if (!(pointsRate >= 70 && repDiff <= -1.5) && !(pointsRate < 20 && candRep > userRep)) {
+              isInterested = true;
+            }
           }
         }
-        // 2. Medium-High Teams -> candRep between 3.0 and 3.9 (or repDiff between 0 and 0.8)
-        else if (candRep >= 3.0 && candRep < 4.0) {
-          // Require decent results: pointsRate >= 45% and lossRate <= 35%
-          // OR if defensive/draw specialist: drawRate >= 35% and pointsRate >= 45%
-          if ((pointsRate >= 45 && lossRate <= 35) || (drawRate >= 35 && pointsRate >= 45)) {
-            isInterested = true;
-          }
-        }
-        // 3. Medium-Low Teams -> candRep between 2.0 and 2.9 (or repDiff between -1.0 and 0)
-        else if (candRep >= 2.0 && candRep < 3.0) {
-          // Require at least regular results: pointsRate >= 35% and lossRate <= 45%
-          // If manager is doing worse, maybe only interested if candRep < userRep - 0.5 (stepping down)
-          if (pointsRate >= 35 && lossRate <= 45) {
-            isInterested = true;
-          } else if (pointsRate < 35 && repDiff <= -0.5) {
-            isInterested = true;
-          }
-        }
-        // 4. Low-Tier Teams -> candRep < 2.0 (or repDiff < -1.0)
-        else {
-          // They are willing to take almost anyone, unless the coach is way too good (pointsRate >= 70% and repDiff <= -1.5)
-          // or if the coach is completely failing (pointsRate < 20% and candRep > userRep)
-          if (!(pointsRate >= 70 && repDiff <= -1.5) && !(pointsRate < 20 && candRep > userRep)) {
-            isInterested = true;
-          }
-        }
-      }
 
-      if (isInterested) {
-        eligibleClubs.push(c);
-      }
-    });
+        if (isInterested) {
+          eligibleClubs.push(c);
+        }
+      });
+    }
 
-    // Pick 3 clubs with a diverse reputation distribution
-    let selected = [];
+    // Pick up to 2-3 clubs with a diverse reputation distribution
+    let selectedClubs = [];
     if (eligibleClubs.length > 0) {
       const stepUp = eligibleClubs.filter(c => (c.team.reputation || 3.0) - userRep > 0.2);
       const sameTier = eligibleClubs.filter(c => Math.abs((c.team.reputation || 3.0) - userRep) <= 0.2);
       const stepDown = eligibleClubs.filter(c => (c.team.reputation || 3.0) - userRep < -0.2);
 
-      // Pick 1 from stepUp, 1 from sameTier, 1 from stepDown
       if (stepUp.length > 0) {
-        selected.push(stepUp[Math.floor(Math.random() * stepUp.length)]);
+        selectedClubs.push(stepUp[Math.floor(Math.random() * stepUp.length)]);
       }
       if (sameTier.length > 0) {
-        selected.push(sameTier[Math.floor(Math.random() * sameTier.length)]);
+        selectedClubs.push(sameTier[Math.floor(Math.random() * sameTier.length)]);
       }
       if (stepDown.length > 0) {
-        selected.push(stepDown[Math.floor(Math.random() * stepDown.length)]);
+        selectedClubs.push(stepDown[Math.floor(Math.random() * stepDown.length)]);
       }
 
-      // Fill with other random eligible clubs if we need more
-      const remaining = eligibleClubs.filter(c => !selected.includes(c));
+      const remaining = eligibleClubs.filter(c => !selectedClubs.includes(c));
       const shuffledRemaining = remaining.sort(() => 0.5 - Math.random());
-      while (selected.length < Math.min(3, eligibleClubs.length) && shuffledRemaining.length > 0) {
-        selected.push(shuffledRemaining.pop());
+      while (selectedClubs.length < Math.min(3, eligibleClubs.length) && shuffledRemaining.length > 0) {
+        selectedClubs.push(shuffledRemaining.pop());
       }
     }
 
-    // Fallback if no clubs found
-    if (selected.length === 0) {
+    if (selectedClubs.length === 0 && allClubs.length > 0) {
       const fallbackClubs = allClubs.filter(c => Math.abs((c.team.reputation || 3.0) - userRep) <= 1.0);
       const shuffledFallback = fallbackClubs.sort(() => 0.5 - Math.random());
-      selected = shuffledFallback.slice(0, 3);
+      selectedClubs = shuffledFallback.slice(0, 3);
     }
 
-    return selected.map(item => {
+    // Map club offers
+    const clubOffers = selectedClubs.map(item => {
       const t = item.team;
       const overall = this.calculateTeamOverallRating(t);
       const isB = item.leagueId.endsWith("_b");
       const rep = t.reputation || 3.0;
       
-      // Expected goal based on reputation
       let goalTitle = "Evitar Rebaixamento";
       let minSafePos = 16;
       if (rep >= 4.5 && !isB) {
@@ -4300,7 +4590,6 @@ class GameEngine {
         minSafePos = 16;
       }
 
-      // Generate a custom board message based on win percentage, draws and losses!
       let message = "";
       const currentTeamName = userTeam.name;
 
@@ -4315,9 +4604,9 @@ class GameEngine {
         } else if (drawRate >= 35 && pointsRate >= 45) {
           message = `Analisamos seu trabalho ${textContext} no ${currentTeamName} e destacamos a sua organização tática. Mesmo com ${draws} empates em ${totalGames} jogos, você manteve o time seguro e muito difícil de ser batido. Acreditamos que você dará a solidez necessária ao ${t.name}.`;
         } else if (pointsRate < 38) {
-          message = `O ${t.name} precisa de uma reformulação completa. Apesar das dificuldades recentes ${textContext} no ${currentTeamName} com ${losses} derrotas e ${draws} empates, enxergamos seu potential tático para reerguer nosso elenco e iniciar um novo ciclo vitorioso.`;
+          message = `O ${t.name} precisa de uma reformulação completa. Apesar das dificuldades recentes ${textContext} no ${currentTeamName} com ${losses} derrotas e ${draws} empates, enxergamos seu potencial tático para reerguer nosso elenco e iniciar um novo ciclo vitorioso.`;
         } else {
-          message = `Analisamos detalhadamente seus números ${textContext} (${wins} vitórias, ${draws} empates, ${losses} derrotas - aproveitamento de ${pointsRate.toFixed(0)}%). Vemos em você o perfil técnico perfeito para guiar nosso elenco rumo aos objetivos traçados.`;
+          message = `Analisamos detalhadamente seus números ${textContext} (${wins} vitórias, ${draws} empates, ${losses} derrotas - aproveitamento de ${pointsRate.toFixed(0)}%). Vemos in você o perfil técnico perfeito para guiar nosso elenco rumo aos objetivos traçados.`;
         }
       }
 
@@ -4334,6 +4623,54 @@ class GameEngine {
         message: message
       };
     });
+
+    // Pick 1-2 random eligible national offers
+    const nationalOffers = [];
+    if (eligibleNationals.length > 0) {
+      const count = Math.min(2, eligibleNationals.length);
+      const shuffledNats = [...eligibleNationals].sort(() => 0.5 - Math.random());
+      for (let i = 0; i < count; i++) {
+        const nt = shuffledNats[i];
+        const rep = Math.max(1.0, Math.min(5.0, (nt.rating - 50) / 10));
+        
+        let goalTitle = "Disputar a Copa com Dignidade";
+        if (nt.rating >= 88) {
+          goalTitle = "Ser Campeão da Copa de Seleções";
+        } else if (nt.rating >= 78) {
+          goalTitle = "Chegar às Quartas de Final";
+        }
+
+        const overall = nt.rating;
+        const budget = 100000000; // 100 Million for national team
+        
+        let message = "";
+        if (totalGames < 3) {
+          message = `A Confederação do/a ${nt.name} vê em você uma nova mente brilhante para conduzir nossa seleção de futebol na disputa mundial.`;
+        } else {
+          const textContext = usingCareerStats ? "na sua carreira" : "no seu clube atual";
+          if (winRate >= 55) {
+            message = `A Federação de Futebol do/a ${nt.name} busca um treinador com perfil vencedor para guiar nossa seleção rumo à glória internacional. Seu aproveitamento espetacular de ${winRate.toFixed(0)}% ${textContext} com o ${userTeam.name} nos provou sua competência.`;
+          } else {
+            message = `Convidamos você para assumir a seleção do/a ${nt.name}. Acreditamos na sua consistência tática e no seu aproveitamento geral de ${pointsRate.toFixed(0)}% de pontos para estruturar nossa equipe principal.`;
+          }
+        }
+
+        nationalOffers.push({
+          teamId: nt.id,
+          teamName: `${nt.flag} ${nt.name}`,
+          leagueId: null,
+          leagueName: "Seleção Nacional",
+          budget: budget,
+          overall: overall,
+          goalTitle: goalTitle,
+          minSafePos: null,
+          rep: rep,
+          message: message
+        });
+      }
+    }
+
+    return clubOffers.concat(nationalOffers);
   }
 
   acceptJobOffer(teamId, leagueId) {
@@ -4346,11 +4683,11 @@ class GameEngine {
 
     // Reset manager parameters for the new team
     this.state.manager.teamId = newTeam.id;
-    this.state.manager.leagueId = leagueId;
+    this.state.manager.leagueId = leagueId || null;
     this.state.manager.currentClubStats = { wins: 0, draws: 0, losses: 0 };
     
     // Auto escalate new squad so they are ready to play
-    this.autoSelectComputerLineup(newTeam);
+    this.autoSelectLineup(newTeam, "4-4-2");
 
     // Generate new season goal
     this.updateSeasonGoals();
@@ -4359,7 +4696,15 @@ class GameEngine {
     this.state.manager.boardConfidence = 80;
 
     // Add news
-    this.addNews("Novo Treinador", `O técnico ${this.state.manager.name} aceitou a proposta do ${newTeam.name} e assumiu o comando do clube!`);
+    const isNational = this.state.nationalTeams && this.state.nationalTeams[newTeam.id] !== undefined;
+    if (isNational) {
+      newTeam.budget = newTeam.budget || 100000000;
+      newTeam.reputation = Math.max(1.0, Math.min(5.0, (newTeam.rating - 50) / 10));
+      this.ensureTeamFinanceLog(newTeam);
+      this.addNews("Novo Selecionador", `O técnico ${this.state.manager.name} aceitou a proposta do/a ${newTeam.name} e assumiu o comando técnico da Seleção! Ele deixou seu cargo anterior para se dedicar à seleção.`);
+    } else {
+      this.addNews("Novo Treinador", `O técnico ${this.state.manager.name} aceitou a proposta do ${newTeam.name} e assumiu o comando do clube!`);
+    }
     
     this.saveGame();
     return true;
