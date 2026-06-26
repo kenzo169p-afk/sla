@@ -2871,6 +2871,7 @@ function skipMatchSim() {
     matchEndHandled = true;
     // Jump minute to 90 and finish immediately
     const match = game.currentMatch;
+    match.isSkipping = true;
     while (match.minute < 90) {
       match.minute++;
       game.simulateUserMatchMinute(match.minute);

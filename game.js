@@ -1406,6 +1406,9 @@ class GameEngine {
       events: []
     };
 
+    homeTeam.matchSubsCount = 0;
+    awayTeam.matchSubsCount = 0;
+
     // Calculate full live match properties
     this.currentMatch.forceHome = this.calculateTeamForce(homeTeam);
     this.currentMatch.forceAway = this.calculateTeamForce(awayTeam);
@@ -1471,9 +1474,15 @@ class GameEngine {
   }
 
   simulateUserMatchMinute(min) {
+    const match = this.currentMatch;
+    // Auto tactical substitutions every minute after 55' (both live and skip modes)
+    if (match && min >= 55 && min % 5 === 0) {
+      this.makeTacticalSubs(match.homeTeam, min);
+      this.makeTacticalSubs(match.awayTeam, min);
+    }
+
     // 6% chance of event per minute
     if (Math.random() < 0.07) {
-      const match = this.currentMatch;
       const fHome = match.forceHome;
       const fAway = match.forceAway;
       const homeBias = 1.08; // small home advantage
@@ -1600,16 +1609,21 @@ class GameEngine {
           
           const userTeam = match.isUserHome ? match.homeTeam : match.awayTeam;
           if (attackingTeam.name === userTeam.name) {
-            // User player injured. Auto-pause game to make sub
-            window.pauseMatchSim();
-            window.showCustomAlert(`ATENÇÃO: Seu jogador ${injured.name} está lesionado e precisa ser substituído!`, "Lesão", () => {
-              // After user acknowledges, open substitution modal (which resumes timer on close)
-              if (typeof window.openMatchSubModal === 'function') {
-                window.openMatchSubModal();
-              } else {
-                window.startMatchTimer();
-              }
-            });
+            if (match.isSkipping) {
+              // Automatically make the sub if the user is skipping simulation to the end
+              this.makeComputerAutoSub(attackingTeam, injured);
+            } else {
+              // User player injured. Auto-pause game to make sub
+              window.pauseMatchSim();
+              window.showCustomAlert(`ATENÇÃO: Seu jogador ${injured.name} está lesionado e precisa ser substituído!`, "Lesão", () => {
+                // After user acknowledges, open substitution modal (which resumes timer on close)
+                if (typeof window.openMatchSubModal === 'function') {
+                  window.openMatchSubModal();
+                } else {
+                  window.startMatchTimer();
+                }
+              });
+            }
           } else {
             // Computer auto sub
             this.makeComputerAutoSub(attackingTeam, injured);
@@ -1779,6 +1793,57 @@ class GameEngine {
       });
       this.recalculateLiveForce();
     }
+  }
+
+  makeTacticalSubs(team, min) {
+    if (!team || !team.squad) return;
+    if (team.matchSubsCount === undefined) {
+      team.matchSubsCount = 0;
+    }
+    if (team.matchSubsCount >= 3) return;
+
+    // Find the most fatigued starting field player (any condition, pick worst)
+    // Also always try to make at least one sub per check interval after 60'
+    const fieldStarters = team.squad
+      .filter(p => p.isStarter && p.position !== "GOL")
+      .sort((a, b) => a.condition - b.condition);
+
+    // Determine if we should force a sub (every 15 minutes after 55') or only if tired (<88)
+    const forceSubMinutes = [55, 70, 82];
+    const shouldForce = forceSubMinutes.includes(min);
+    const candidates = shouldForce
+      ? fieldStarters.slice(0, 1) // force replace the most tired one
+      : fieldStarters.filter(p => p.condition < 88);
+
+    for (let tiredPlayer of candidates) {
+      if (team.matchSubsCount >= 3) break;
+
+      // Find best available reserve (any condition > 50)
+      const reserve = team.squad
+        .filter(p => p.isSub && p.condition > 50)
+        .sort((a, b) => {
+          const samePos = (a.position === tiredPlayer.position ? 1 : 0) - (b.position === tiredPlayer.position ? 1 : 0);
+          if (samePos !== 0) return -samePos;
+          return b.rating - a.rating;
+        })[0];
+
+      if (reserve) {
+        tiredPlayer.isStarter = false;
+        tiredPlayer.isSub = false; // sent off, cannot be re-entered
+        reserve.isSub = false;
+        reserve.isStarter = true;
+        team.matchSubsCount++;
+
+        if (this.currentMatch) {
+          this.currentMatch.commentary.unshift({
+            min: min,
+            txt: `Substituição tática no ${team.name}: Entra ${reserve.name} no lugar de ${tiredPlayer.name}.`,
+            type: "sub"
+          });
+        }
+      }
+    }
+    this.recalculateLiveForce();
   }
 
   // Simulated other matches round step-by-step
@@ -2945,9 +3010,9 @@ class GameEngine {
     if (!team || !team.squad) return;
     team.squad.forEach(p => {
       if (p.isStarter) {
-        // Decrease condition by 10-18% depending on age and traits
-        let decay = Math.round(10 + (p.age > 30 ? (p.age - 30) * 1.2 : 0) + (Math.random() * 5));
-        if (p.skills && p.skills.includes("Velocidade")) decay += 2;
+        // Decrease condition by 3-6% depending on age and traits (energy lasts much longer)
+        let decay = Math.round(3 + (p.age > 30 ? (p.age - 30) * 0.4 : 0) + (Math.random() * 2));
+        if (p.skills && p.skills.includes("Velocidade")) decay += 1;
         p.condition = Math.max(10, p.condition - decay);
         p.morale = Math.max(10, Math.min(100, p.morale + Math.floor(Math.random() * 5) - 1));
       } else {

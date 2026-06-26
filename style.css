@@ -1168,8 +1168,32 @@ select option {
   display: none;
 }
 
-/* Responsive design for mobile devices */
-@media (max-width: 768px) {
+/* Sidebar overlay backdrop hidden by default */
+.sidebar-overlay {
+  display: none;
+}
+
+/* Responsive design for mobile and tablet devices (iPads) */
+@media (max-width: 1024px) {
+  /* Overlay backdrop layout */
+  .sidebar-overlay {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(4px) !important;
+    z-index: 3999 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.25s ease !important;
+  }
+  #sidebar.active ~ .sidebar-overlay {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
   /* Welcome setup screen */
   .welcome-box {
     padding: 24px 16px !important;
@@ -1427,4 +1451,15 @@ select option {
     font-size: 12px !important;
     padding: 6px 8px !important;
   }
+}
+
+/* Momentum scrolling for all overflow containers on touch screens */
+.screen-container,
+.news-list,
+.commentary-log,
+.match-sidebar-scores,
+.bench-selector-list,
+.modal-content,
+.sidebar-links {
+  -webkit-overflow-scrolling: touch;
 }
