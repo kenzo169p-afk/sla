@@ -10,24 +10,24 @@ const LEAGUES_DATA = [
     teams: [
       { name: "Palmeiras", colors: ["#006437", "#ffffff"], reputation: 4.5 },
       { name: "Flamengo", colors: ["#d30a13", "#111111"], reputation: 4.5 },
-      { name: "Botafogo", colors: ["#111111", "#ffffff"], reputation: 4.3 },
-      { name: "Atlético-MG", colors: ["#111111", "#ffffff"], reputation: 4.2 },
+      { name: "Botafogo", colors: ["#111111", "#ffffff"], reputation: 4.5 },
+      { name: "Atlético-MG", colors: ["#111111", "#ffffff"], reputation: 4.3 },
       { name: "São Paulo", colors: ["#ffffff", "#d30a13"], reputation: 4.2 },
       { name: "Fluminense", colors: ["#800020", "#006437"], reputation: 4.0 },
       { name: "Grêmio", colors: ["#0d8cd5", "#ffffff"], reputation: 4.0 },
-      { name: "Athletico-PR", colors: ["#d30a13", "#111111"], reputation: 3.8 },
-      { name: "Internacional", colors: ["#d30a13", "#ffffff"], reputation: 4.0 },
+      { name: "Internacional", colors: ["#d30a13", "#ffffff"], reputation: 4.1 },
       { name: "Corinthians", colors: ["#ffffff", "#111111"], reputation: 4.1 },
-      { name: "Bahia", colors: ["#0056b3", "#ffffff"], reputation: 3.9 },
-      { name: "Vasco da Gama", colors: ["#111111", "#ffffff"], reputation: 3.8 },
-      { name: "Cruzeiro", colors: ["#0033a0", "#ffffff"], reputation: 4.1 },
-      { name: "Red Bull Bragantino", colors: ["#ffffff", "#d30a13"], reputation: 3.7 },
-      { name: "Vitória", colors: ["#d30a13", "#111111"], reputation: 3.4 },
-      { name: "Santos", colors: ["#ffffff", "#111111"], reputation: 4.0 },
-      { name: "Coritiba", colors: ["#006437", "#ffffff"], reputation: 3.3 },
-      { name: "Mirassol", colors: ["#ffcc00", "#006437"], reputation: 3.2 },
-      { name: "Clube do Remo", colors: ["#001c43", "#ffffff"], reputation: 3.1 },
-      { name: "Chapecoense", colors: ["#006437", "#ffffff"], reputation: 3.1 }
+      { name: "Bahia", colors: ["#0056b3", "#ffffff"], reputation: 4.0 },
+      { name: "Vasco da Gama", colors: ["#111111", "#ffffff"], reputation: 3.9 },
+      { name: "Cruzeiro", colors: ["#0033a0", "#ffffff"], reputation: 4.2 },
+      { name: "Red Bull Bragantino", colors: ["#ffffff", "#d30a13"], reputation: 3.8 },
+      { name: "Vitória", colors: ["#d30a13", "#111111"], reputation: 3.5 },
+      { name: "Santos", colors: ["#ffffff", "#111111"], reputation: 4.1 },
+      { name: "Mirassol", colors: ["#ffcc00", "#006437"], reputation: 3.4 },
+      { name: "Fortaleza", colors: ["#0056b3", "#d30a13"], reputation: 4.2 },
+      { name: "Ceará", colors: ["#111111", "#ffffff"], reputation: 3.6 },
+      { name: "Juventude", colors: ["#006437", "#ffffff"], reputation: 3.5 },
+      { name: "Sport Recife", colors: ["#d30a13", "#ffcc00"], reputation: 3.6 }
     ]
   },
   {
@@ -37,12 +37,13 @@ const LEAGUES_DATA = [
     nationality: "Brazilian",
     reputation: 2.8,
     teams: [
-      { name: "Fortaleza", colors: ["#0056b3", "#d30a13"], reputation: 3.9 },
+      { name: "Athletico-PR", colors: ["#d30a13", "#111111"], reputation: 3.7 },
+      { name: "Coritiba", colors: ["#006437", "#ffffff"], reputation: 3.3 },
+      { name: "Clube do Remo", colors: ["#001c43", "#ffffff"], reputation: 3.1 },
+      { name: "Chapecoense", colors: ["#006437", "#ffffff"], reputation: 3.1 },
       { name: "América-MG", colors: ["#006437", "#111111"], reputation: 3.2 },
       { name: "Goiás", colors: ["#006437", "#ffffff"], reputation: 3.2 },
-      { name: "Sport Recife", colors: ["#d30a13", "#ffcc00"], reputation: 3.3 },
-      { name: "Ceará", colors: ["#111111", "#ffffff"], reputation: 3.3 },
-      { name: "Novorizontino", colors: ["#ffcc00", "#111111"], reputation: 3.0 },
+      { name: "Novorizontino", colors: ["#ffcc00", "#111111"], reputation: 3.2 },
       { name: "Vila Nova", colors: ["#d30a13", "#ffffff"], reputation: 2.9 },
       { name: "Operário-PR", colors: ["#ffffff", "#111111"], reputation: 2.7 },
       { name: "Avaí", colors: ["#0056b3", "#ffffff"], reputation: 2.9 },
@@ -53,7 +54,6 @@ const LEAGUES_DATA = [
       { name: "Atlético-GO", colors: ["#d30a13", "#111111"], reputation: 3.1 },
       { name: "Criciúma", colors: ["#ffcc00", "#111111"], reputation: 3.2 },
       { name: "Cuiabá", colors: ["#006437", "#ffcc00"], reputation: 3.2 },
-      { name: "Juventude", colors: ["#006437", "#ffffff"], reputation: 3.2 },
       { name: "Londrina", colors: ["#5cbbf6", "#ffffff"], reputation: 2.7 },
       { name: "Náutico", colors: ["#d30a13", "#ffffff"], reputation: 2.8 },
       { name: "São Bernardo", colors: ["#ffcc00", "#111111"], reputation: 2.7 }
@@ -501,18 +501,16 @@ const STAR_PLAYERS = {
     { name: "Nicolás de la Cruz", pos: "MEI", rating: 82, age: 29, nat: "Uruguayan", traits: ["Velocidade", "Passe"] },
     { name: "Léo Ortiz", pos: "ZAG", rating: 80, age: 30, nat: "Brazilian", traits: ["Marcação", "Desarme"] },
     { name: "Everton Cebolinha", pos: "ATA", rating: 79, age: 30, nat: "Brazilian", traits: ["Drible", "Velocidade"] },
-    { name: "Luiz Araújo", pos: "ATA", rating: 78, age: 29, nat: "Brazilian", traits: ["Velocidade", "Cruzamento"] },
     { name: "Rossi", pos: "GOL", rating: 78, age: 31, nat: "Argentinian", traits: ["Reflexo", "Elasticidade"] }
   ],
   "Palmeiras": [
-    { name: "Raphael Veiga", pos: "MEI", rating: 82, age: 31, nat: "Brazilian", traits: ["Finalização", "Armação"] },
     { name: "Estêvão", pos: "ATA", rating: 83, age: 19, nat: "Brazilian", traits: ["Drible", "Velocidade"] },
+    { name: "Raphael Veiga", pos: "MEI", rating: 82, age: 31, nat: "Brazilian", traits: ["Finalização", "Armação"] },
     { name: "Felipe Anderson", pos: "MEI", rating: 80, age: 33, nat: "Brazilian", traits: ["Drible", "Passe"] },
     { name: "Aníbal Moreno", pos: "MEI", rating: 80, age: 26, nat: "Argentinian", traits: ["Marcação", "Desarme"] },
     { name: "Gustavo Gómez", pos: "ZAG", rating: 80, age: 33, nat: "Paraguayan", traits: ["Marcação", "Cabeceio"] },
     { name: "Flaco López", pos: "ATA", rating: 79, age: 25, nat: "Argentinian", traits: ["Finalização", "Cabeceio"] },
     { name: "Richard Ríos", pos: "MEI", rating: 79, age: 26, nat: "Colombian", traits: ["Drible", "Força"] },
-    { name: "Joaquín Piquerez", pos: "LAT", rating: 78, age: 27, nat: "Uruguayan", traits: ["Cruzamento", "Marcação"] },
     { name: "Weverton", pos: "GOL", rating: 78, age: 38, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
   ],
   "Botafogo": [
@@ -522,7 +520,6 @@ const STAR_PLAYERS = {
     { name: "Jefferson Savarino", pos: "ATA", rating: 79, age: 29, nat: "Venezuelan", traits: ["Velocidade", "Passe"] },
     { name: "Alexander Barboza", pos: "ZAG", rating: 79, age: 30, nat: "Argentinian", traits: ["Marcação", "Cabeceio"] },
     { name: "Marlon Freitas", pos: "MEI", rating: 78, age: 30, nat: "Brazilian", traits: ["Passe", "Marcação"] },
-    { name: "Vitinho", pos: "LAT", rating: 78, age: 26, nat: "Brazilian", traits: ["Cruzamento", "Velocidade"] },
     { name: "John", pos: "GOL", rating: 78, age: 30, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
   ],
   "Cruzeiro": [
@@ -531,7 +528,6 @@ const STAR_PLAYERS = {
     { name: "Álvaro Barreal", pos: "MEI", rating: 78, age: 25, nat: "Argentinian", traits: ["Drible", "Passe"] },
     { name: "Walace", pos: "MEI", rating: 78, age: 30, nat: "Brazilian", traits: ["Marcação", "Passe"] },
     { name: "William", pos: "LAT", rating: 78, age: 30, nat: "Brazilian", traits: ["Cruzamento", "Velocidade"] },
-    { name: "João Marcelo", pos: "ZAG", rating: 77, age: 25, nat: "Brazilian", traits: ["Marcação", "Desarme"] },
     { name: "Cássio", pos: "GOL", rating: 77, age: 39, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
   ],
   "Corinthians": [
@@ -548,7 +544,6 @@ const STAR_PLAYERS = {
     { name: "Gustavo Scarpa", pos: "MEI", rating: 79, age: 32, nat: "Brazilian", traits: ["Cruzamento", "Armação"] },
     { name: "Guilherme Arana", pos: "LAT", rating: 79, age: 29, nat: "Brazilian", traits: ["Cruzamento", "Marcação"] },
     { name: "Rodrigo Battaglia", pos: "ZAG", rating: 78, age: 34, nat: "Argentinian", traits: ["Marcação", "Desarme"] },
-    { name: "Junior Alonso", pos: "ZAG", rating: 78, age: 33, nat: "Paraguayan", traits: ["Marcação", "Cabeceio"] },
     { name: "Everson", pos: "GOL", rating: 77, age: 36, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
   ],
   "São Paulo": [
@@ -556,14 +551,13 @@ const STAR_PLAYERS = {
     { name: "Jonathan Calleri", pos: "ATA", rating: 80, age: 32, nat: "Argentinian", traits: ["Cabeceio", "Finalização"] },
     { name: "Luciano", pos: "MEI", rating: 78, age: 33, nat: "Brazilian", traits: ["Finalização", "Passe"] },
     { name: "Robert Arboleda", pos: "ZAG", rating: 78, age: 34, nat: "Ecuadorian", traits: ["Marcação", "Cabeceio"] },
-    { name: "Rafael", pos: "GOL", rating: 77, age: 36, nat: "Brazilian", traits: ["Reflexo", "Saída de Gol"] },
-    { name: "Alisson", pos: "MEI", rating: 77, age: 32, nat: "Brazilian", traits: ["Marcação", "Passe"] }
+    { name: "Rafael", pos: "GOL", rating: 77, age: 36, nat: "Brazilian", traits: ["Reflexo", "Saída de Gol"] }
   ],
   "Fluminense": [
-    { name: "Jhon Arias", pos: "ATA", rating: 81, age: 28, nat: "Colombian", traits: ["Velocidade", "Drible"] },
     { name: "Thiago Silva", pos: "ZAG", rating: 80, age: 41, nat: "Brazilian", traits: ["Marcação", "Cabeceio"] },
     { name: "Ganso", pos: "MEI", rating: 78, age: 36, nat: "Brazilian", traits: ["Passe", "Armação"] },
     { name: "Martinelli", pos: "MEI", rating: 77, age: 24, nat: "Brazilian", traits: ["Marcação", "Passe"] },
+    { name: "John Kennedy", pos: "ATA", rating: 77, age: 24, nat: "Brazilian", traits: ["Velocidade", "Finalização"] },
     { name: "Fábio", pos: "GOL", rating: 77, age: 45, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
   ],
   "Bahia": [
@@ -571,7 +565,6 @@ const STAR_PLAYERS = {
     { name: "Cauly", pos: "MEI", rating: 78, age: 30, nat: "Brazilian", traits: ["Armação", "Drible"] },
     { name: "Jean Lucas", pos: "MEI", rating: 78, age: 27, nat: "Brazilian", traits: ["Passe", "Drible"] },
     { name: "Thaciano", pos: "ATA", rating: 77, age: 31, nat: "Brazilian", traits: ["Força", "Finalização"] },
-    { name: "Gabriel Xavier", pos: "ZAG", rating: 77, age: 25, nat: "Brazilian", traits: ["Marcação", "Desarme"] },
     { name: "Marcos Felipe", pos: "GOL", rating: 76, age: 30, nat: "Brazilian", traits: ["Reflexo", "Saída de Gol"] }
   ],
   "Vasco da Gama": [
@@ -610,10 +603,54 @@ const STAR_PLAYERS = {
     { name: "Franco Mastantuono", pos: "MEI", rating: 78, age: 18, nat: "Argentinian", traits: ["Drible", "Armação"] }
   ],
   "Santos": [
+    { name: "Neymar Jr", pos: "MEI", rating: 84, age: 34, nat: "Brazilian", traits: ["Drible", "Armação"] },
     { name: "Guilherme", pos: "ATA", rating: 76, age: 31, nat: "Brazilian", traits: ["Velocidade", "Drible"] },
     { name: "Giuliano", pos: "MEI", rating: 75, age: 36, nat: "Brazilian", traits: ["Passe", "Armação"] },
     { name: "João Paulo", pos: "GOL", rating: 76, age: 30, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] },
     { name: "Diego Pituca", pos: "MEI", rating: 75, age: 33, nat: "Brazilian", traits: ["Marcação", "Passe"] }
+  ],
+  "Fortaleza": [
+    { name: "Juan Martín Lucero", pos: "ATA", rating: 79, age: 34, nat: "Argentinian", traits: ["Finalização", "Cabeceio"] },
+    { name: "Yago Pikachu", pos: "MEI", rating: 77, age: 33, nat: "Brazilian", traits: ["Velocidade", "Finalização"] },
+    { name: "Tomás Pochettino", pos: "MEI", rating: 77, age: 29, nat: "Argentinian", traits: ["Armação", "Passe"] },
+    { name: "Tinga", pos: "LAT", rating: 76, age: 32, nat: "Brazilian", traits: ["Cruzamento", "Marcação"] },
+    { name: "João Ricardo", pos: "GOL", rating: 77, age: 37, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
+  ],
+  "Ceará": [
+    { name: "Erick Pulga", pos: "ATA", rating: 77, age: 25, nat: "Brazilian", traits: ["Velocidade", "Drible"] },
+    { name: "Saulo Mineiro", pos: "ATA", rating: 75, age: 28, nat: "Brazilian", traits: ["Velocidade", "Força"] },
+    { name: "Lourenço", pos: "MEI", rating: 75, age: 28, nat: "Brazilian", traits: ["Passe", "Finalização"] },
+    { name: "Richard", pos: "GOL", rating: 75, age: 34, nat: "Brazilian", traits: ["Reflexo", "Saída de Gol"] }
+  ],
+  "Juventude": [
+    { name: "Nenê", pos: "MEI", rating: 75, age: 44, nat: "Brazilian", traits: ["Passe", "Armação"] },
+    { name: "Lucas Barbosa", pos: "ATA", rating: 76, age: 25, nat: "Brazilian", traits: ["Velocidade", "Finalização"] },
+    { name: "Jadson", pos: "MEI", rating: 74, age: 32, nat: "Brazilian", traits: ["Marcação", "Passe"] },
+    { name: "Gabriel", pos: "GOL", rating: 75, age: 33, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
+  ],
+  "Sport Recife": [
+    { name: "Chrystian Barletta", pos: "ATA", rating: 76, age: 24, nat: "Brazilian", traits: ["Velocidade", "Drible"] },
+    { name: "Lucas Lima", pos: "MEI", rating: 75, age: 35, nat: "Brazilian", traits: ["Armação", "Passe"] },
+    { name: "Gustavo Coutinho", pos: "ATA", rating: 75, age: 27, nat: "Brazilian", traits: ["Finalização", "Cabeceio"] },
+    { name: "Caíque França", pos: "GOL", rating: 75, age: 31, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
+  ],
+  "Mirassol": [
+    { name: "Dellatorre", pos: "ATA", rating: 75, age: 34, nat: "Brazilian", traits: ["Finalização", "Força"] },
+    { name: "Chico Kim", pos: "MEI", rating: 74, age: 34, nat: "Korean", traits: ["Passe", "Armação"] },
+    { name: "Alex Muralha", pos: "GOL", rating: 74, age: 36, nat: "Brazilian", traits: ["Reflexo", "Saída de Gol"] }
+  ],
+  "Vitória": [
+    { name: "Alerrandro", pos: "ATA", rating: 76, age: 26, nat: "Brazilian", traits: ["Finalização", "Cabeceio"] },
+    { name: "Matheuzinho", pos: "MEI", rating: 76, age: 28, nat: "Brazilian", traits: ["Drible", "Armação"] },
+    { name: "Wagner Leonardo", pos: "ZAG", rating: 76, age: 26, nat: "Brazilian", traits: ["Marcação", "Desarme"] },
+    { name: "Lucas Arcanjo", pos: "GOL", rating: 75, age: 27, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
+  ],
+  "Red Bull Bragantino": [
+    { name: "Helinho", pos: "ATA", rating: 78, age: 26, nat: "Brazilian", traits: ["Velocidade", "Drible"] },
+    { name: "Eduardo Sasha", pos: "ATA", rating: 77, age: 34, nat: "Brazilian", traits: ["Finalização", "Cabeceio"] },
+    { name: "Lincoln", pos: "MEI", rating: 76, age: 27, nat: "Brazilian", traits: ["Armação", "Passe"] },
+    { name: "Luan Cândido", pos: "LAT", rating: 76, age: 25, nat: "Brazilian", traits: ["Cruzamento", "Marcação"] },
+    { name: "Cleiton", pos: "GOL", rating: 76, age: 28, nat: "Brazilian", traits: ["Reflexo", "Elasticidade"] }
   ]
 };
 
