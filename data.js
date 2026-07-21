@@ -2648,7 +2648,7 @@ const STAR_PLAYERS = {
     { name: "Matheus Alexandre", pos: "LAT", rating: 74, age: 27, nat: "Brazilian", traits: ["Cruzamento", "Marcação"] },
     { name: "Marcelinho", pos: "LAT", rating: 73, age: 27, nat: "Brazilian", traits: ["Cruzamento", "Velocidade"] },
     { name: "Mayk", pos: "LAT", rating: 73, age: 26, nat: "Brazilian", traits: ["Cruzamento", "Marcação"] },
-    { name: "Edson Kauã", : "LAT", rating: 67, age: 22, nat: "Brazilian", traits: ["Cruzamento", "Velocidade"] },
+    { name: "Edson Kauã", pos: "LAT", rating: 67, age: 22, nat: "Brazilian", traits: ["Cruzamento", "Velocidade"] },
     { name: "Caio Magalhães", pos: "LAT", rating: 66, age: 20, nat: "Brazilian", traits: ["Cruzamento", "Marcação"] },
     { name: "Leonel Picco", pos: "MEI", rating: 78, age: 27, nat: "Argentinian", traits: ["Marcação", "Passe"] },
     { name: "Vitor Bueno", pos: "MEI", rating: 76, age: 31, nat: "Brazilian", traits: ["Passe", "Armação"] },
