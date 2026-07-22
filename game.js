@@ -4773,7 +4773,7 @@ class GameEngine {
         }
 
         const overall = nt.rating;
-        const budget = 100000000; // 100 Million for national team
+        const budget = 50000000; // 50 Million for national team
         
         let message = "";
         if (totalGames < 3) {

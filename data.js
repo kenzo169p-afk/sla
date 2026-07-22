@@ -4818,99 +4818,53 @@ function generateWorldDatabase() {
       name: league.name,
       country: league.country,
       reputation: league.reputation,
-      teams: league.teams.map(teamData => {
-        const teamName = teamData.name;
-        const starSquad = STAR_PLAYERS[teamName] || [];
-        const squad = [];
+      teams: (() => {
+        // Step 1: Generate squads and preliminary team data
+        const tempTeams = league.teams.map(teamData => {
+          const teamName = teamData.name;
+          const starSquad = STAR_PLAYERS[teamName] || [];
+          const squad = [];
 
-        // Generate squad based on team reputation and division
-        // High reputation teams get high rated players (average rating 80-92)
-        // Low reputation teams get lower rated players (average rating 60-75)
-        const rep = teamData.reputation;
-        const isSecondDiv = league.id.endsWith("_b");
-        const avgRating = isSecondDiv
-          ? Math.round(38 + (rep * 4.5) + (Math.random() * 4))
-          : Math.round(55 + (rep * 7.5) + (Math.random() * 5));
+          // Generate squad based on team reputation and division
+          // High reputation teams get high rated players (average rating 80-92)
+          // Low reputation teams get lower rated players (average rating 60-75)
+          const rep = teamData.reputation;
+          const isSecondDiv = league.id.endsWith("_b");
+          const avgRating = isSecondDiv
+            ? Math.round(38 + (rep * 4.5) + (Math.random() * 4))
+            : Math.round(55 + (rep * 7.5) + (Math.random() * 5));
 
-        // Distribution of positions: 2 GOL, 5 ZAG, 3 LAT, 6 MEI, 4 ATA = 20 players
-        const positionCount = {
-          "GOL": 2,
-          "ZAG": 5,
-          "LAT": 3,
-          "MEI": 6,
-          "ATA": 4
-        };
+          // Distribution of positions: 2 GOL, 5 ZAG, 3 LAT, 6 MEI, 4 ATA = 20 players
+          const positionCount = {
+            "GOL": 2,
+            "ZAG": 5,
+            "LAT": 3,
+            "MEI": 6,
+            "ATA": 4
+          };
 
-        // Add pre-defined star players first
-        starSquad.forEach(star => {
-          let rating = star.rating;
-          if (isSecondDiv) {
-            rating = Math.max(50, Math.round(star.rating * 0.8)); // scale down star players of second division teams
-          }
-          const value = calculatePlayerValue(rating, star.age, star.pos);
-          const salary = calculatePlayerSalary(rating, star.age, value);
-          let potential = rating;
-          if (star.age <= 25) {
-            potential = Math.min(99, rating + Math.floor(Math.random() * 12) + 4);
-          } else if (star.age <= 30) {
-            potential = Math.min(99, rating + Math.floor(Math.random() * 4) + 1);
-          }
-          squad.push({
-            id: generateId(),
-            name: star.name,
-            position: star.pos,
-            rating: rating,
-            potential: potential,
-            age: star.age,
-            nationality: star.nat,
-            value: value,
-            salary: salary,
-            goals: 0,
-            assists: 0,
-            yellowCards: 0,
-            redCards: 0,
-            games: 0,
-            condition: 100,
-            morale: 90,
-            skills: star.traits,
-            contract: Math.floor(Math.random() * 4) + 2 // 2 to 5 years
-          });
-
-          // Decrement count for generated players
-          if (positionCount[star.pos] > 0) {
-            positionCount[star.pos]--;
-          }
-        });
-
-        // Generate remaining players to fill roster
-        Object.entries(positionCount).forEach(([pos, count]) => {
-          for (let i = 0; i < count; i++) {
-            const playerRating = clamp(
-              Math.round(avgRating + (Math.random() * 12 - 6)),
-              45,
-              99
-            );
-            const age = Math.floor(Math.random() * 18) + 17; // 17 to 34
-            const nationality = league.nationality;
-            const name = generatePlayerName(nationality);
-            const value = calculatePlayerValue(playerRating, age, pos);
-            const salary = calculatePlayerSalary(playerRating, age, value);
-            const traits = generateTraits(pos);
-            let potential = playerRating;
-            if (age <= 25) {
-              potential = Math.min(99, playerRating + Math.floor(Math.random() * 12) + 4);
-            } else if (age <= 30) {
-              potential = Math.min(99, playerRating + Math.floor(Math.random() * 4) + 1);
+          // Add pre-defined star players first
+          starSquad.forEach(star => {
+            let rating = star.rating;
+            if (isSecondDiv) {
+              rating = Math.max(50, Math.round(star.rating * 0.8)); // scale down star players of second division teams
             }
-
+            const value = calculatePlayerValue(rating, star.age, star.pos);
+            const salary = calculatePlayerSalary(rating, star.age, value);
+            let potential = rating;
+            if (star.age <= 25) {
+              potential = Math.min(99, rating + Math.floor(Math.random() * 12) + 4);
+            } else if (star.age <= 30) {
+              potential = Math.min(99, rating + Math.floor(Math.random() * 4) + 1);
+            }
             squad.push({
               id: generateId(),
-              name: name,
-              position: pos,
-              rating: playerRating,
+              name: star.name,
+              position: star.pos,
+              rating: rating,
               potential: potential,
-              age: age,
-              nationality: nationality,
+              age: star.age,
+              nationality: star.nat,
               value: value,
               salary: salary,
               goals: 0,
@@ -4919,59 +4873,148 @@ function generateWorldDatabase() {
               redCards: 0,
               games: 0,
               condition: 100,
-              morale: 80 + Math.floor(Math.random() * 20),
-              skills: traits,
-              contract: Math.floor(Math.random() * 4) + 2
+              morale: 90,
+              skills: star.traits,
+              contract: Math.floor(Math.random() * 4) + 2 // 2 to 5 years
             });
-          }
+
+            // Decrement count for generated players
+            if (positionCount[star.pos] > 0) {
+              positionCount[star.pos]--;
+            }
+          });
+
+          // Generate remaining players to fill roster
+          Object.entries(positionCount).forEach(([pos, count]) => {
+            for (let i = 0; i < count; i++) {
+              const playerRating = clamp(
+                Math.round(avgRating + (Math.random() * 12 - 6)),
+                45,
+                99
+              );
+              const age = Math.floor(Math.random() * 18) + 17; // 17 to 34
+              const nationality = league.nationality;
+              const name = generatePlayerName(nationality);
+              const value = calculatePlayerValue(playerRating, age, pos);
+              const salary = calculatePlayerSalary(playerRating, age, value);
+              const traits = generateTraits(pos);
+              let potential = playerRating;
+              if (age <= 25) {
+                potential = Math.min(99, playerRating + Math.floor(Math.random() * 12) + 4);
+              } else if (age <= 30) {
+                potential = Math.min(99, playerRating + Math.floor(Math.random() * 4) + 1);
+              }
+
+              squad.push({
+                id: generateId(),
+                name: name,
+                position: pos,
+                rating: playerRating,
+                potential: potential,
+                age: age,
+                nationality: nationality,
+                value: value,
+                salary: salary,
+                goals: 0,
+                assists: 0,
+                yellowCards: 0,
+                redCards: 0,
+                games: 0,
+                condition: 100,
+                morale: 80 + Math.floor(Math.random() * 20),
+                skills: traits,
+                contract: Math.floor(Math.random() * 4) + 2
+              });
+            }
+          });
+
+          // Set squad details and sort by position, then rating descending
+          squad.sort((a, b) => {
+            const posOrder = { "GOL": 0, "LAT": 1, "ZAG": 2, "MEI": 3, "ATA": 4 };
+            if (posOrder[a.position] !== posOrder[b.position]) {
+              return posOrder[a.position] - posOrder[b.position];
+            }
+            return b.rating - a.rating;
+          });
+
+          // Calculate squad overall rating (top 18 players)
+          const sortedSquad = [...squad].sort((a, b) => b.rating - a.rating);
+          const top18 = sortedSquad.slice(0, 18);
+          const sum = top18.reduce((acc, p) => acc + p.rating, 0);
+          const teamOverall = Math.round(sum / top18.length);
+
+          return {
+            teamData,
+            squad,
+            teamOverall,
+            isSecondDiv
+          };
         });
 
-        // Set squad details and sort by position, then rating descending
-        squad.sort((a, b) => {
-          const posOrder = { "GOL": 0, "LAT": 1, "ZAG": 2, "MEI": 3, "ATA": 4 };
-          if (posOrder[a.position] !== posOrder[b.position]) {
-            return posOrder[a.position] - posOrder[b.position];
+        // Step 2: Sort teams by overall rating descending
+        tempTeams.sort((a, b) => b.teamOverall - a.teamOverall);
+
+        // Step 3: Map to final database structure, calculating budget by overall ranking
+        return tempTeams.map((item, index) => {
+          const { teamData, squad, teamOverall, isSecondDiv } = item;
+          const numTeams = tempTeams.length;
+
+          let budget = 0;
+          if (isSecondDiv) {
+            // Max R$ 30M, Min R$ 3M
+            const maxBudget = 30000000;
+            const minBudget = 3000000;
+            if (numTeams > 1) {
+              budget = Math.round(maxBudget - (index / (numTeams - 1)) * (maxBudget - minBudget));
+            } else {
+              budget = maxBudget;
+            }
+          } else {
+            // Max R$ 300M, Min R$ 60M
+            const maxBudget = 300000000;
+            const minBudget = 60000000;
+            if (numTeams > 1) {
+              budget = Math.round(maxBudget - (index / (numTeams - 1)) * (maxBudget - minBudget));
+            } else {
+              budget = maxBudget;
+            }
           }
-          return b.rating - a.rating;
+
+          let ticketPrice = Math.round(15 + (teamData.reputation * 10)); // 15 to 65
+          let stadiumCap = Math.round((teamData.reputation ** 2) * 5000 + 10000); // 15k to 135k
+          let sponsorIncome = Math.round(teamData.reputation * 150000); // weekly sponsor income
+
+          if (isSecondDiv) {
+            stadiumCap = Math.round((teamData.reputation ** 1.8) * 1500 + 5000); // 10k to 25k
+            ticketPrice = Math.round(10 + (teamData.reputation * 5)); // 15 to 30
+            sponsorIncome = Math.round(teamData.reputation * 30000); // weekly sponsor income
+          }
+
+          return {
+            id: generateId(),
+            name: teamData.name,
+            colors: teamData.colors,
+            reputation: teamData.reputation,
+            squad: squad,
+            budget: budget,
+            stadiumCapacity: stadiumCap,
+            stadiumUpgrading: false,
+            stadiumUpgradeWeeks: 0,
+            ticketPrice: ticketPrice,
+            fansLoyalty: 60 + Math.floor(teamData.reputation * 8),
+            loan: 0,
+            sponsorIncome: sponsorIncome, // weekly sponsor income
+            points: 0,
+            played: 0,
+            wins: 0,
+            draws: 0,
+            losses: 0,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            form: []
+          };
         });
-
-        // Standard team parameters
-        let budget = Math.round((teamData.reputation ** 3.5) * 5000000); // 10M to 250M
-        let ticketPrice = Math.round(15 + (teamData.reputation * 10)); // 15 to 65
-        let stadiumCap = Math.round((teamData.reputation ** 2) * 5000 + 10000); // 15k to 135k
-        let sponsorIncome = Math.round(teamData.reputation * 150000); // weekly sponsor income
-
-        if (isSecondDiv) {
-          budget = Math.round((teamData.reputation ** 2.5) * 500000); // R$ 5M to R$ 14.3M (lower starting money)
-          stadiumCap = Math.round((teamData.reputation ** 1.8) * 1500 + 5000); // 10k to 25k
-          ticketPrice = Math.round(10 + (teamData.reputation * 5)); // 15 to 30
-          sponsorIncome = Math.round(teamData.reputation * 30000); // weekly sponsor income
-        }
-
-        return {
-          id: generateId(),
-          name: teamName,
-          colors: teamData.colors,
-          reputation: teamData.reputation,
-          squad: squad,
-          budget: budget,
-          stadiumCapacity: stadiumCap,
-          stadiumUpgrading: false,
-          stadiumUpgradeWeeks: 0,
-          ticketPrice: ticketPrice,
-          fansLoyalty: 60 + Math.floor(teamData.reputation * 8),
-          loan: 0,
-          sponsorIncome: sponsorIncome, // weekly sponsor income
-          points: 0,
-          played: 0,
-          wins: 0,
-          draws: 0,
-          losses: 0,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          form: []
-        };
-      })
+      })()
     };
   });
 
@@ -5115,7 +5158,7 @@ function calculatePlayerValue(rating, age, pos) {
 
   // Rating effect is exponential
   const ratingFactor = Math.pow(rating / 60, 4.5);
-  let baseValue = ratingFactor * 800000;
+  let baseValue = ratingFactor * 8000000;
 
   // Adjust by position
   let posFactor = 1.0;
@@ -5125,14 +5168,14 @@ function calculatePlayerValue(rating, age, pos) {
   else if (pos === "MEI") posFactor = 1.1;
   else if (pos === "ATA") posFactor = 1.25;
 
-  const finalValue = Math.round(baseValue * ageMultiplier * posFactor);
+  const finalValue = Math.round(baseValue * ageMultiplier * posFactor * 1.7);
   return Math.max(50000, Math.round(finalValue / 10000) * 10000); // round to nearest 10k, minimum 50k
 }
 
 function calculatePlayerSalary(rating, age, value) {
   // Salary is roughly 0.5% - 1.5% of value annually divided by 52 (weekly wage)
-  // Let's do a weekly salary based on rating and value
-  const baseSalary = value * 0.003; // weekly salary is ~0.3% of transfer value
+  // Decouple salary from the 10x inflated player market value to prevent bankruptcy
+  const baseSalary = (value / 10) * 0.003; // weekly salary is ~0.3% of transfer value
   const ratingBonus = (rating - 50) * 80;
   let finalSalary = Math.round(baseSalary + ratingBonus);
   return Math.max(500, Math.round(finalSalary / 100) * 100); // minimum 500/week, round to 100

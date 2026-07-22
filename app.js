@@ -770,6 +770,11 @@ function confirmSwapPlayer(newStarterId) {
 
 // Render Tables & Standings (Classificação) View
 function renderTables(container) {
+  container.innerHTML = "";
+  if (typeof window.showAllTables === "undefined") {
+    window.showAllTables = false;
+  }
+
   // Dropdown to choose league table
   const bar = document.createElement("div");
   bar.style.display = "flex";
@@ -777,38 +782,108 @@ function renderTables(container) {
   bar.style.alignItems = "center";
   bar.style.marginBottom = "20px";
 
+  const userTeamId = game.state.manager.teamId;
+  const isNational = game.state.nationalTeams && game.state.nationalTeams[userTeamId] !== undefined;
+
+  let userComps = [];
+  if (isNational) {
+    userComps.push({ value: "selecoes", label: "Copa de Seleções" });
+  } else {
+    // 1. User League
+    const userLeagueId = game.state.manager.leagueId;
+    const leagueName = game.state.database[userLeagueId]?.name || "Liga";
+    userComps.push({ value: `league_${userLeagueId}`, label: leagueName });
+
+    // 2. User Cup
+    const userTeam = game.findTeamById(userTeamId);
+    if (userTeam) {
+      const userLeague = game.findLeagueByTeamId(userTeamId);
+      if (userLeague && userLeague.country) {
+        userComps.push({ value: `cup_${userLeague.country}`, label: `Copa Nacional (${userLeague.country.toUpperCase()})` });
+      }
+    }
+
+    // 3. Continental Cups
+    ["champions", "libertadores", "sudamericana"].forEach(compKey => {
+      const comp = game.state.continentalFixtures[compKey];
+      if (comp && comp.teams && comp.teams.includes(userTeamId)) {
+        const compNames = { champions: "UEFA Champions League", libertadores: "Copa Libertadores", sudamericana: "Copa Sudamericana" };
+        userComps.push({ value: `continental_${compKey}`, label: compNames[compKey] });
+      }
+    });
+
+    // 4. Mundial de Clubes
+    const mundial = game.state.mundialFixtures;
+    if (mundial && mundial.teams && mundial.teams.includes(userTeamId)) {
+      userComps.push({ value: "mundial", label: "Mundial de Clubes da FIFA" });
+    }
+  }
+
   let selectHtml = `<select id="table-select-league" class="form-control" style="width: auto;" onchange="renderStandingsTable()">`;
   
-  selectHtml += `<optgroup label="Ligas Nacionais">`;
-  for (const [leagueId, league] of Object.entries(game.state.database)) {
-    const isUser = leagueId === game.state.manager.leagueId;
-    selectHtml += `<option value="league_${leagueId}" ${isUser ? 'selected' : ''}>${league.name}</option>`;
+  if (!window.showAllTables) {
+    // Show only user competitions
+    userComps.forEach((comp, idx) => {
+      selectHtml += `<option value="${comp.value}" ${idx === 0 ? 'selected' : ''}>${comp.label}</option>`;
+    });
+  } else {
+    // Show all competitions
+    selectHtml += `<optgroup label="Ligas Nacionais">`;
+    for (const [leagueId, league] of Object.entries(game.state.database)) {
+      const isUser = leagueId === game.state.manager.leagueId;
+      selectHtml += `<option value="league_${leagueId}" ${isUser ? 'selected' : ''}>${league.name}</option>`;
+    }
+    selectHtml += `</optgroup>`;
+
+    selectHtml += `<optgroup label="Copas Nacionais">`;
+    for (const country of Object.keys(game.state.cupFixtures || {})) {
+      selectHtml += `<option value="cup_${country}">Copa Nacional (${country})</option>`;
+    }
+    selectHtml += `</optgroup>`;
+
+    selectHtml += `<optgroup label="Copas Continentais">`;
+    selectHtml += `<option value="continental_champions">UEFA Champions League</option>`;
+    selectHtml += `<option value="continental_libertadores">Copa Libertadores</option>`;
+    selectHtml += `<option value="continental_sudamericana">Copa Sudamericana</option>`;
+    selectHtml += `</optgroup>`;
+
+    selectHtml += `<optgroup label="Torneios de Elite & Seleções">`;
+    selectHtml += `<option value="mundial">Mundial de Clubes da FIFA</option>`;
+    selectHtml += `<option value="selecoes">Copa de Seleções</option>`;
+    selectHtml += `</optgroup>`;
   }
-  selectHtml += `</optgroup>`;
-
-  selectHtml += `<optgroup label="Copas Nacionais">`;
-  for (const country of Object.keys(game.state.cupFixtures || {})) {
-    selectHtml += `<option value="cup_${country}">Copa Nacional (${country})</option>`;
-  }
-  selectHtml += `</optgroup>`;
-
-  selectHtml += `<optgroup label="Copas Continentais">`;
-  selectHtml += `<option value="continental_champions">UEFA Champions League</option>`;
-  selectHtml += `<option value="continental_libertadores">Copa Libertadores</option>`;
-  selectHtml += `<option value="continental_sudamericana">Copa Sudamericana</option>`;
-  selectHtml += `</optgroup>`;
-
-  selectHtml += `<optgroup label="Torneios de Elite & Seleções">`;
-  selectHtml += `<option value="mundial">Mundial de Clubes da FIFA</option>`;
-  selectHtml += `<option value="selecoes">Copa de Seleções</option>`;
-  selectHtml += `</optgroup>`;
-
   selectHtml += `</select>`;
 
-  bar.innerHTML = `
-    <h3 style="font-size: 20px; font-weight:700;">Tabela de Classificação</h3>
-    ${selectHtml}
-  `;
+  const controls = document.createElement("div");
+  controls.style.display = "flex";
+  controls.style.alignItems = "center";
+  
+  const selectWrapper = document.createElement("div");
+  selectWrapper.innerHTML = selectHtml;
+  controls.appendChild(selectWrapper.firstChild);
+
+  const toggleBtnText = window.showAllTables ? "Ver Minhas Competições" : "Ver Outras Competições";
+  const toggleBtn = document.createElement("button");
+  toggleBtn.className = "btn-secondary";
+  toggleBtn.style.marginLeft = "12px";
+  toggleBtn.style.padding = "8px 16px";
+  toggleBtn.style.fontSize = "13px";
+  toggleBtn.style.width = "auto";
+  toggleBtn.textContent = toggleBtnText;
+  toggleBtn.onclick = () => {
+    window.showAllTables = !window.showAllTables;
+    renderTables(container);
+  };
+  controls.appendChild(toggleBtn);
+
+  const title = document.createElement("h3");
+  title.style.fontSize = "20px";
+  title.style.fontWeight = "700";
+  title.style.margin = "0";
+  title.textContent = "Tabela de Classificação";
+
+  bar.appendChild(title);
+  bar.appendChild(controls);
   container.appendChild(bar);
 
   // Table wrapper card
