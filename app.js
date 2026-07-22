@@ -487,7 +487,7 @@ function renderSquad(container) {
 
   card.innerHTML = `
     <h3 class="card-title">
-      Gerenciamento do Elenco ${isSelecoes ? `da Seleção (${userTeam.name})` : `(${userTeam.squad.length}/26 jogadores)`}
+      Gerenciamento do Elenco ${isSelecoes ? `da Seleção (${userTeam.name})` : `(${userTeam.squad.length}/50 jogadores)`}
       ${pullBaseButton}
     </h3>
     <table class="premium-table">
@@ -1632,6 +1632,12 @@ let bidAcceptedByClub = false;
 let offerDetails = null;
 
 function openNegotiateModal(playerId) {
+  const userTeam = game.findTeamById(game.state.manager.teamId);
+  if (userTeam && userTeam.squad && userTeam.squad.length >= 50) {
+    alert("Seu elenco está cheio! O limite é de 50 jogadores.");
+    return;
+  }
+
   const pDetails = game.findPlayerById(playerId);
   if (!pDetails) return;
 

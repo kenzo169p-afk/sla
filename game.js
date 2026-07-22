@@ -3911,6 +3911,11 @@ class GameEngine {
   completeTransfer(player, ownerTeam, bidAmount, weeklySalary, contractYears) {
     const userTeam = this.findTeamById(this.state.manager.teamId);
 
+    if (userTeam.squad.length >= 50) {
+      alert("Seu elenco está cheio! O limite é de 50 jogadores.");
+      return;
+    }
+
     // Subtract transfer fee
     this.adjustTeamBudget(userTeam, -bidAmount, 'transferFeesPaid');
     if (ownerTeam) {
@@ -4018,8 +4023,8 @@ class GameEngine {
       return;
     }
 
-    if (userTeam.squad.length >= 26) {
-      alert("Seu elenco está cheio! O limite é de 26 jogadores.");
+    if (userTeam.squad.length >= 50) {
+      alert("Seu elenco está cheio! O limite é de 50 jogadores.");
       return;
     }
 
