@@ -1415,12 +1415,39 @@ class GameEngine {
 
     // Initialize other matches of the round
     if (matchInfo.allMatches) {
+      const isKnockout = ["cup", "continental_knockout", "mundial", "selecoes_knockout"].includes(matchInfo.type);
       matchInfo.allMatches.forEach(m => {
         m.scoreHome = 0;
         m.scoreAway = 0;
         m.scorersHome = [];
         m.scorersAway = [];
         m.simulated = false;
+
+        // Skip user's own match
+        if (m.homeId === matchInfo.match.homeId && m.awayId === matchInfo.match.awayId) return;
+
+        const h = this.findTeamById(m.homeId);
+        const a = this.findTeamById(m.awayId);
+        if (h && a) {
+          const fH = this.calculateTeamForce(h);
+          const fA = this.calculateTeamForce(a);
+          const res = this.generateMatchScore(fH, fA, isKnockout);
+
+          m.targetScoreHome = res.scoreHome;
+          m.targetScoreAway = res.scoreAway;
+          m.goalMinutesHome = [];
+          m.goalMinutesAway = [];
+
+          for (let i = 0; i < res.scoreHome; i++) {
+            m.goalMinutesHome.push(Math.floor(Math.random() * 90) + 1);
+          }
+          m.goalMinutesHome.sort((x, y) => x - y);
+
+          for (let i = 0; i < res.scoreAway; i++) {
+            m.goalMinutesAway.push(Math.floor(Math.random() * 90) + 1);
+          }
+          m.goalMinutesAway.sort((x, y) => x - y);
+        }
       });
     }
 
@@ -1429,25 +1456,38 @@ class GameEngine {
 
   // Calculates playing force of a team based on squad and mentality
   calculateTeamForce(team) {
+    if (!team || !team.squad || team.squad.length === 0) return 30;
     const starters = team.squad.filter(p => p.isStarter);
+    const reserves = team.squad.filter(p => !p.isStarter);
+
     if (starters.length === 0) return 30;
 
-    let totalRating = 0;
+    let startersRating = 0;
     let avgCondition = 0;
     let avgMorale = 0;
 
     starters.forEach(p => {
-      totalRating += p.rating;
+      startersRating += p.rating;
       avgCondition += p.condition;
       avgMorale += p.morale;
     });
 
-    let avgRating = totalRating / starters.length;
+    startersRating = startersRating / starters.length;
     avgCondition = avgCondition / starters.length;
     avgMorale = avgMorale / starters.length;
 
-    // Force is average rating scaled by condition and morale
-    let force = avgRating * (0.5 + (avgCondition / 200)) * (0.8 + (avgMorale / 500));
+    let reservesRating = 0;
+    if (reserves.length > 0) {
+      reservesRating = reserves.reduce((acc, p) => acc + p.rating, 0) / reserves.length;
+    } else {
+      reservesRating = startersRating * 0.8;
+    }
+
+    // General overall is weighted: 75% starters, 25% reserves
+    let generalOverall = startersRating * 0.75 + reservesRating * 0.25;
+
+    // Force is general overall scaled by condition and morale
+    let force = generalOverall * (0.5 + (avgCondition / 200)) * (0.8 + (avgMorale / 500));
 
     // Mentality bonus
     if (team.mentality === "offensive") force *= 1.05;
@@ -1455,6 +1495,121 @@ class GameEngine {
     else if (team.mentality === "defensive") force *= 0.95;
 
     return Math.round(force);
+  }
+
+  // Generates match goals for home and away based on their forces
+  generateMatchScore(fH, fA, isKnockout = false) {
+    const homeAdvantage = 2.5; // Home advantage in force rating points
+    const effectiveDiff = fH - fA + homeAdvantage;
+
+    let probHomeWin, probDraw, probAwayWin;
+
+    if (Math.abs(effectiveDiff) <= 3) {
+      // Similar overalls (difference between -3 and 3)
+      probDraw = 0.50; // 50% chance of draw
+      if (effectiveDiff >= 0) {
+        probHomeWin = 0.30;
+        probAwayWin = 0.20;
+      } else {
+        probHomeWin = 0.20;
+        probAwayWin = 0.30;
+      }
+    } else if (effectiveDiff > 3) {
+      // Home is stronger
+      const factor = Math.min(12, effectiveDiff - 3);
+      probHomeWin = 0.50 + (factor * 0.038); // up to 95.6%
+      probDraw = 0.35 - (factor * 0.025);   // down to 5%
+      probAwayWin = 1.0 - probHomeWin - probDraw;
+    } else {
+      // Away is stronger
+      const factor = Math.min(12, Math.abs(effectiveDiff) - 3);
+      probAwayWin = 0.50 + (factor * 0.038); // up to 95.6%
+      probDraw = 0.35 - (factor * 0.025);   // down to 5%
+      probHomeWin = 1.0 - probAwayWin - probDraw;
+    }
+
+    // Clamp probabilities to be safe
+    probHomeWin = Math.max(0.02, Math.min(0.96, probHomeWin));
+    probDraw = Math.max(0.02, Math.min(0.50, probDraw));
+    probAwayWin = Math.max(0.02, Math.min(0.96, probAwayWin));
+
+    // Normalize probabilities to sum up to 1.0
+    const sum = probHomeWin + probDraw + probAwayWin;
+    probHomeWin /= sum;
+    probDraw /= sum;
+    probAwayWin /= sum;
+
+    // Roll result
+    const roll = Math.random();
+    let scoreHome = 0;
+    let scoreAway = 0;
+
+    if (roll < probHomeWin) {
+      // Home Win
+      const diffGoals = 1 + Math.floor(Math.random() * (1 + Math.floor(Math.abs(effectiveDiff) / 6)));
+      scoreAway = Math.floor(Math.random() * 2); // 0 or 1
+      scoreHome = scoreAway + diffGoals;
+    } else if (roll < probHomeWin + probDraw) {
+      // Draw
+      const drawRoll = Math.random();
+      let goals = 0;
+      if (drawRoll < 0.35) goals = 0;
+      else if (drawRoll < 0.80) goals = 1;
+      else if (drawRoll < 0.97) goals = 2;
+      else goals = 3;
+
+      scoreHome = goals;
+      scoreAway = goals;
+    } else {
+      // Away Win
+      const diffGoals = 1 + Math.floor(Math.random() * (1 + Math.floor(Math.abs(effectiveDiff) / 6)));
+      scoreHome = Math.floor(Math.random() * 2); // 0 or 1
+      scoreAway = scoreHome + diffGoals;
+    }
+
+    return { scoreHome, scoreAway };
+  }
+
+  // Simulates a fast match in the background and populates its score/scorers
+  simulateFastMatch(m, homeTeam, awayTeam, isKnockout = false) {
+    const fH = this.calculateTeamForce(homeTeam);
+    const fA = this.calculateTeamForce(awayTeam);
+
+    const res = this.generateMatchScore(fH, fA, isKnockout);
+
+    m.scoreHome = res.scoreHome;
+    m.scoreAway = res.scoreAway;
+    m.scorersHome = [];
+    m.scorersAway = [];
+
+    // Distribute goals and choose scorers
+    for (let i = 0; i < res.scoreHome; i++) {
+      const min = Math.floor(Math.random() * 90) + 1;
+      m.scorersHome.push({ name: this.selectScorer(homeTeam).name, min: min });
+    }
+    m.scorersHome.sort((a, b) => a.min - b.min);
+
+    for (let i = 0; i < res.scoreAway; i++) {
+      const min = Math.floor(Math.random() * 90) + 1;
+      m.scorersAway.push({ name: this.selectScorer(awayTeam).name, min: min });
+    }
+    m.scorersAway.sort((a, b) => a.min - b.min);
+
+    if (isKnockout) {
+      if (res.scoreHome === res.scoreAway) {
+        m.isPenalties = true;
+        const pH = fH / (fH + fA);
+        let pH_wins = Math.random() < pH;
+        m.penHome = pH_wins ? 5 : 4;
+        m.penAway = pH_wins ? 4 : 5;
+        m.winnerId = pH_wins ? m.homeId : m.awayId;
+      } else {
+        m.isPenalties = false;
+        m.winnerId = res.scoreHome > res.scoreAway ? m.homeId : m.awayId;
+      }
+    }
+
+    m.simulated = true;
   }
 
   // Ticks the current live match simulation by 1 minute
@@ -1485,9 +1640,10 @@ class GameEngine {
     if (Math.random() < 0.07) {
       const fHome = match.forceHome;
       const fAway = match.forceAway;
-      const homeBias = 1.08; // small home advantage
-
-      const probHome = (fHome * homeBias) / (fHome * homeBias + fAway);
+      const homeBiasPoints = 2.5; // Home advantage in force rating points
+      const diff = fHome - fAway + homeBiasPoints;
+      // Logistic sigmoid probability to favor the stronger team much more heavily
+      const probHome = 1 / (1 + Math.exp(-diff / 8));
       const isHomeEvent = Math.random() < probHome;
 
       const attackingTeam = isHomeEvent ? match.homeTeam : match.awayTeam;
@@ -1861,17 +2017,20 @@ class GameEngine {
       const away = this.findTeamById(match.awayId);
       if (!home || !away) return;
 
-      const forceHome = this.calculateTeamForce(home);
-      const forceAway = this.calculateTeamForce(away);
-
-      // Simulates minor scoring events (3.5% chance per minute, matches fast sim)
-      if (Math.random() < 0.035) {
-        const total = forceHome + forceAway;
-        if (Math.random() < (forceHome * 1.05) / total) {
+      // Check pre-determined goals for home
+      if (match.goalMinutesHome) {
+        while (match.goalMinutesHome.length > 0 && match.goalMinutesHome[0] <= currentMin) {
+          match.goalMinutesHome.shift();
           match.scoreHome++;
           const scorer = this.selectScorer(home);
           match.scorersHome.push({ name: scorer.name, min: currentMin });
-        } else {
+        }
+      }
+
+      // Check pre-determined goals for away
+      if (match.goalMinutesAway) {
+        while (match.goalMinutesAway.length > 0 && match.goalMinutesAway[0] <= currentMin) {
+          match.goalMinutesAway.shift();
           match.scoreAway++;
           const scorer = this.selectScorer(away);
           match.scorersAway.push({ name: scorer.name, min: currentMin });
@@ -1879,6 +2038,23 @@ class GameEngine {
       }
 
       if (currentMin === 90) {
+        // Resolve penalties or knockout winners if necessary
+        const isKnockout = ["cup", "continental_knockout", "mundial", "selecoes_knockout"].includes(type);
+        if (isKnockout) {
+          if (match.scoreHome === match.scoreAway) {
+            match.isPenalties = true;
+            const fH = this.calculateTeamForce(home);
+            const fA = this.calculateTeamForce(away);
+            const pH = fH / (fH + fA);
+            let pH_wins = Math.random() < pH;
+            match.penHome = pH_wins ? 5 : 4;
+            match.penAway = pH_wins ? 4 : 5;
+            match.winnerId = pH_wins ? match.homeId : match.awayId;
+          } else {
+            match.isPenalties = false;
+            match.winnerId = match.scoreHome > match.scoreAway ? match.homeId : match.awayId;
+          }
+        }
         match.simulated = true;
       }
     });
@@ -2588,31 +2764,9 @@ class GameEngine {
             const a = league.teams.find(t => t.id === m.awayId);
 
             // Fast simulation
-            const fH = this.calculateTeamForce(h);
-            const fA = this.calculateTeamForce(a);
-            
-            // Random scoring based on relative strength
-            const total = fH + fA;
-            const goalChance = 0.05 * 90; // avg goals per match
-            
-            let goalsH = 0;
-            let goalsA = 0;
-            
-            for (let i = 0; i < 90; i++) {
-              if (Math.random() < 0.035) {
-                if (Math.random() < (fH * 1.05) / total) {
-                  goalsH++;
-                  m.scorersHome.push({ name: this.selectScorer(h).name, min: i });
-                } else {
-                  goalsA++;
-                  m.scorersAway.push({ name: this.selectScorer(a).name, min: i });
-                }
-              }
-            }
-
-            m.scoreHome = goalsH;
-            m.scoreAway = goalsA;
-            m.simulated = true;
+            this.simulateFastMatch(m, h, a, false);
+            const goalsH = m.scoreHome;
+            const goalsA = m.scoreAway;
 
             // Apply points
             h.played++; a.played++;
@@ -2646,28 +2800,9 @@ class GameEngine {
             const h = this.findTeamById(m.homeId);
             const a = this.findTeamById(m.awayId);
             
-            const fH = this.calculateTeamForce(h);
-            const fA = this.calculateTeamForce(a);
-            
-            let gH = 0; let gA = 0;
-            for (let i = 0; i < 90; i++) {
-              if (Math.random() < 0.035) {
-                if (Math.random() < (fH * 1.05) / (fH + fA)) gH++; else gA++;
-              }
-            }
-            m.scoreHome = gH; m.scoreAway = gA;
-            
-            if (gH === gA) {
-              m.isPenalties = true;
-              const pH = fH / (fH + fA);
-              let pH_wins = Math.random() < pH;
-              m.penHome = pH_wins ? 5 : 4;
-              m.penAway = pH_wins ? 4 : 5;
-              m.winnerId = pH_wins ? m.homeId : m.awayId;
-            } else {
-              m.winnerId = gH > gA ? m.homeId : m.awayId;
-            }
-            m.simulated = true;
+            this.simulateFastMatch(m, h, a, true);
+            const gH = m.scoreHome;
+            const gA = m.scoreAway;
 
             this.adjustTeamBudget(h, this.calculateTicketIncome(h, gH, gA) * 1.2, 'ticketSales');
             this.applyConditionDecay(h);
@@ -2703,17 +2838,9 @@ class GameEngine {
               const h = this.findTeamById(m.homeId);
               const a = this.findTeamById(m.awayId);
 
-              const fH = this.calculateTeamForce(h);
-              const fA = this.calculateTeamForce(a);
-              
-              let gH = 0; let gA = 0;
-              for (let i = 0; i < 90; i++) {
-                if (Math.random() < 0.035) {
-                  if (Math.random() < (fH * 1.05) / (fH + fA)) gH++; else gA++;
-                }
-              }
-              m.scoreHome = gH; m.scoreAway = gA;
-              m.simulated = true;
+              this.simulateFastMatch(m, h, a, false);
+              const gH = m.scoreHome;
+              const gA = m.scoreAway;
               this.adjustTeamBudget(h, this.calculateTicketIncome(h, gH, gA) * 1.5, 'ticketSales');
               this.applyConditionDecay(h);
               this.applyConditionDecay(a);
@@ -2731,28 +2858,9 @@ class GameEngine {
               const h = this.findTeamById(m.homeId);
               const a = this.findTeamById(m.awayId);
 
-              const fH = this.calculateTeamForce(h);
-              const fA = this.calculateTeamForce(a);
-
-              let gH = 0; let gA = 0;
-              for (let i = 0; i < 90; i++) {
-                if (Math.random() < 0.035) {
-                  if (Math.random() < (fH * 1.05) / (fH + fA)) gH++; else gA++;
-                }
-              }
-              m.scoreHome = gH; m.scoreAway = gA;
-
-              if (gH === gA) {
-                m.isPenalties = true;
-                const pH = fH / (fH + fA);
-                let pH_wins = Math.random() < pH;
-                m.penHome = pH_wins ? 5 : 4;
-                m.penAway = pH_wins ? 4 : 5;
-                m.winnerId = pH_wins ? m.homeId : m.awayId;
-              } else {
-                m.winnerId = gH > gA ? m.homeId : m.awayId;
-              }
-              m.simulated = true;
+              this.simulateFastMatch(m, h, a, true);
+              const gH = m.scoreHome;
+              const gA = m.scoreAway;
               this.adjustTeamBudget(h, this.calculateTicketIncome(h, gH, gA) * 1.5, 'ticketSales');
               this.applyConditionDecay(h);
               this.applyConditionDecay(a);
@@ -2793,28 +2901,9 @@ class GameEngine {
           const h = this.findTeamById(m.homeId);
           const a = this.findTeamById(m.awayId);
 
-          const fH = this.calculateTeamForce(h);
-          const fA = this.calculateTeamForce(a);
-
-          let gH = 0; let gA = 0;
-          for (let i = 0; i < 90; i++) {
-            if (Math.random() < 0.035) {
-              if (Math.random() < (fH * 1.05) / (fH + fA)) gH++; else gA++;
-            }
-          }
-          m.scoreHome = gH; m.scoreAway = gA;
-
-          if (gH === gA) {
-            m.isPenalties = true;
-            const pH = fH / (fH + fA);
-            let pH_wins = Math.random() < pH;
-            m.penHome = pH_wins ? 5 : 4;
-            m.penAway = pH_wins ? 4 : 5;
-            m.winnerId = pH_wins ? m.homeId : m.awayId;
-          } else {
-            m.winnerId = gH > gA ? m.homeId : m.awayId;
-          }
-          m.simulated = true;
+          this.simulateFastMatch(m, h, a, true);
+          const gH = m.scoreHome;
+          const gA = m.scoreAway;
           this.adjustTeamBudget(h, this.calculateTicketIncome(h, gH, gA) * 2.0, 'ticketSales');
           this.applyConditionDecay(h);
           this.applyConditionDecay(a);
@@ -2853,17 +2942,9 @@ class GameEngine {
             const h = this.findTeamById(m.homeId);
             const a = this.findTeamById(m.awayId);
 
-            const fH = this.calculateTeamForce(h);
-            const fA = this.calculateTeamForce(a);
-
-            let gH = 0; let gA = 0;
-            for (let i = 0; i < 90; i++) {
-              if (Math.random() < 0.035) {
-                if (Math.random() < (fH * 1.05) / (fH + fA)) gH++; else gA++;
-              }
-            }
-            m.scoreHome = gH; m.scoreAway = gA;
-            m.simulated = true;
+            this.simulateFastMatch(m, h, a, false);
+            const gH = m.scoreHome;
+            const gA = m.scoreAway;
 
             h.played++;
             a.played++;
@@ -2902,28 +2983,9 @@ class GameEngine {
             const h = this.findTeamById(m.homeId);
             const a = this.findTeamById(m.awayId);
 
-            const fH = this.calculateTeamForce(h);
-            const fA = this.calculateTeamForce(a);
-
-            let gH = 0; let gA = 0;
-            for (let i = 0; i < 90; i++) {
-              if (Math.random() < 0.035) {
-                if (Math.random() < (fH * 1.05) / (fH + fA)) gH++; else gA++;
-              }
-            }
-            m.scoreHome = gH; m.scoreAway = gA;
-
-            if (gH === gA) {
-              m.isPenalties = true;
-              const pH = fH / (fH + fA);
-              let pH_wins = Math.random() < pH;
-              m.penHome = pH_wins ? 5 : 4;
-              m.penAway = pH_wins ? 4 : 5;
-              m.winnerId = pH_wins ? m.homeId : m.awayId;
-            } else {
-              m.winnerId = gH > gA ? m.homeId : m.awayId;
-            }
-            m.simulated = true;
+            this.simulateFastMatch(m, h, a, true);
+            const gH = m.scoreHome;
+            const gA = m.scoreAway;
 
             this.applyConditionDecay(h);
             this.applyConditionDecay(a);
