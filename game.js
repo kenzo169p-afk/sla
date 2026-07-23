@@ -2274,9 +2274,9 @@ class GameEngine {
         // Cup Final Winner!
         const finalMatch = roundMatches[0];
         const champion = this.findTeamById(finalMatch.winnerId);
-        const prize = 15000000; // 15M prize
+        const prize = 40000000; // 40M prize
         this.awardTitleRewards(champion, "Copa Nacional", prize);
-        this.addNews("Campeão da Copa", `${champion.name} vence a Copa Nacional e leva a taça + R$ 15.000.000 de premiação!`);
+        this.addNews("Campeão da Copa", `${champion.name} vence a Copa Nacional e leva a taça + R$ 40.000.000 de premiação!`);
         
         if (champion.id === userTeamId) {
           this.state.manager.trophies.push({ year: this.state.year, title: "Copa Nacional", team: champion.name });
@@ -2413,9 +2413,7 @@ class GameEngine {
           // Final Winner!
           const finalMatch = allMatches[0];
           const champion = this.findTeamById(finalMatch.winnerId);
-          let prize = 25000000;
-          if (compKey === "champions") prize = 35000000;
-          else if (compKey === "sudamericana") prize = 15000000;
+          let prize = 40000000;
           
           let cupName = "Copa Libertadores";
           if (compKey === "champions") cupName = "Champions League";
@@ -2820,7 +2818,7 @@ class GameEngine {
           } else {
             // End Cup
             const cupWinner = this.findTeamById(cup.rounds[roundIdx][0].winnerId);
-            this.awardTitleRewards(cupWinner, "Copa Nacional", 15000000);
+            this.awardTitleRewards(cupWinner, "Copa Nacional", 40000000);
           }
         }
       });
@@ -2877,9 +2875,7 @@ class GameEngine {
             } else {
               const finalMatch = comp.knockoutRounds[roundIdx][0];
               const champion = this.findTeamById(finalMatch.winnerId);
-              let prize = 25000000;
-              if (compKey === "champions") prize = 35000000;
-              else if (compKey === "sudamericana") prize = 15000000;
+              let prize = 40000000;
               
               let cupName = "Copa Libertadores";
               if (compKey === "champions") cupName = "Champions League";
@@ -3642,12 +3638,12 @@ class GameEngine {
 
       // Awards
       const isSecondDiv = leagueId.endsWith("_b");
-      const prizeChamp = isSecondDiv ? 5000000 : 30000000;
+      const prizeChamp = isSecondDiv ? 5000000 : 100000000;
       const prizeRunner = isSecondDiv ? 3000000 : 18000000;
       this.awardTitleRewards(champion, league.name, prizeChamp);
       this.adjustTeamBudget(runnerUp, prizeRunner, 'prizeMoney');
 
-      this.addNews("Campeão Nacional", `${champion.name} é o campeão da liga ${league.name}!`);
+      this.addNews("Campeão Nacional", `${champion.name} é o campeão da liga ${league.name} e leva a premiação de R$ ${prizeChamp.toLocaleString()}!`);
 
       if (champion.id === this.state.manager.teamId) {
         this.state.manager.trophies.push({ year: this.state.year, title: league.name, team: champion.name });
